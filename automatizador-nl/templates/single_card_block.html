@@ -1,0 +1,240 @@
+<!-- SINGLE CARD BLOCK COMPLETO -->
+
+<!-- CARD BASE -->
+<table class="fullWithMobile" border="0" cellpadding="0" cellspacing="0" role="presentation" width="288"
+       style="border-collapse:collapse; background:#FFFFFF; border-radius:8px; font-family:Arial, sans-serif;">
+
+  <!-- IMAGEN CLICABLE -->
+  <tr>
+    <td class="fullWithMobile" style="padding:0;">
+      <a href="{{ item.url | safe }}" target="_blank"
+         style="display:block; border:0; text-decoration:none; outline:none;">
+        <img 
+          src="{{ item.image }}" 
+          alt="{{ item.title }}"
+          style="display:block;width:100%;border-radius:8px 8px 0 0;border:0;">
+      </a>
+    </td>
+  </tr>
+
+  <!-- Espaciador superior -->
+  <tr><td style="height:16px; line-height:16px; font-size:0;">&#8202;</td></tr>
+
+  <!-- CONTENIDO SUPERIOR -->
+  <tr>
+    <td>
+      <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
+        <tr>
+          <td valign="top" style="word-break:break-word">
+
+            <!-- Altura distinta según modo de card -->
+            {% if newsletter.card_mode == "vacacional" %}
+            <div style="box-sizing:border-box;height:160px;">
+            {% else %}
+            <div style="box-sizing:border-box;height:204px;">
+            {% endif %}
+
+              <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
+
+                <!-- BADGE -->
+                {% if item.badge_text %}
+                <tr>
+                  <td style="padding:0 16px;">
+                    <span style="
+                      display:inline-block;
+                      border-radius:4px;
+                      {% if item.badge_color %}background-color: {{ item.badge_color }};{% endif %}
+                      color:{% if item.badge_text == 'Oferta exclusiva' %}#222222{% else %}#FFFFFF{% endif %};
+                      padding:2px 8px;
+                      font-size:12px;
+                      line-height:18px;
+                      font-weight:600;
+                      font-family:Arial, Helvetica, sans-serif;
+                    ">
+                      {{ item.badge_text }}
+                    </span>
+                  </td>
+                </tr>
+
+                <!-- Espaciador bajo badge -->
+                <tr><td style="height:8px; line-height:8px; font-size:0;">&#8202;</td></tr>
+                {% endif %}
+
+                <!-- TÍTULO -->
+                <tr>
+                  <td style="padding:0 16px;">
+                    <p style="margin:0; font-size:20px; color:#222222; font-weight:bold;">
+                      {{ item.title }}
+                    </p>
+                  </td>
+                </tr>
+
+                <!-- METADATOS -->
+                <tr>
+                  <td style="padding:0 16px;">
+                    <p style="margin:4px 0 0 0; font-size:14px; color:#666666;">
+                      {{ item.metadata }}
+                    </p>
+                  </td>
+                </tr>
+
+                <!-- Espaciador -->
+                <tr><td style="height:8px; line-height:8px; font-size:0;">&#8202;</td></tr>
+
+                <!-- DESCRIPCIÓN -->
+                <tr>
+                  <td style="padding:0 16px;">
+                    <p style="margin:0; font-size:14px; color:#222222; line-height:1.4;">
+                      {{ item.description_short }}
+                    </p>
+                  </td>
+                </tr>
+
+                <!-- Espaciador -->
+                <tr><td style="height:12px; line-height:12px; font-size:0;">&#8202;</td></tr>
+
+                <!-- RATING SOLO EN OCIO URBANO -->
+                {% if newsletter.card_mode != "vacacional" %}
+                  
+                  {% if item.rating_value %}
+                  <tr>
+                    <td style="padding:0 16px;">
+                      <h4 style="margin:0; font-family:Arial, sans-serif;">
+                        <span style="
+                          background-color:#DAF7E6;
+                          color:#027D49;
+                          border-radius:4px;
+                          padding:4px 10px;
+                          font-size:14px;
+                          font-weight:bold;
+                          display:inline-block;
+                          margin-right:4px;
+                        ">
+                          <!-- ⭐ NUEVO: rating sin decimales cuando no toca -->
+                          {{ item.rating_value_formatted }}
+                        </span>
+
+                        {% if item.rating_text %}
+                        <span style="font-size:14px; font-weight:bold; color:#027D49;">
+                          {{ item.rating_text }}
+                        </span>
+                        {% endif %}
+                      </h4>
+                    </td>
+                  </tr>
+
+                  <!-- Espaciador bajo rating -->
+                  <tr><td style="height:20px; line-height:20px; font-size:0;">&#8202;</td></tr>
+
+                  {% else %}
+                  <!-- Cuando no hay rating reservamos altura -->
+                  <tr><td style="height:46px; line-height:46px; font-size:0;">&#8202;</td></tr>
+                  {% endif %}
+
+                {% endif %}
+
+              </table>
+            </div>
+
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- BLOQUE INFERIOR: PRECIOS + CTA -->
+  <tr>
+    <td>
+      <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
+        <tr>
+          <td valign="top" style="word-break:break-word">
+
+            {% if newsletter.card_mode == "vacacional" %}
+            <div style="box-sizing:border-box;height:130px;">
+            {% else %}
+            <div style="box-sizing:border-box;height:132px;">
+            {% endif %}
+
+              <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
+
+                <!-- PRECIOS -->
+                {% if item.price_old and item.discount_percentage %}
+                <tr>
+                  <td style="padding:0 16px;">
+                    <p style="margin:0; font-size:14px; color:#666;">desde <s>{{ item.price_old }} €</s></p>
+                    <p style="margin:0; font-size:20px; font-weight:bold;">
+                      {{ item.price }} €
+                      <span style="
+                        float:right;
+                        color:#e6002c;
+                        margin-left:12px;
+                        border:1px solid #ffb8c4;
+                        padding:4px;
+                        border-radius:4px;
+                        font-size:16px;
+                        line-height:20px;
+                        font-weight:600;
+                      ">-{{ item.discount_percentage }}%</span>
+                    </p>
+                  </td>
+                </tr>
+
+                {% elif item.discount_percentage %}
+                <tr>
+                  <td style="padding:0 16px;">
+                    <p style="margin:0; font-size:14px; color:#666;">desde</p>
+                    <p style="margin:0; font-size:20px; font-weight:bold;">
+                      {{ item.price }} €
+                      <span style="
+                        float:right;
+                        color:#e6002c;
+                        margin-left:12px;
+                        border:1px solid #ffb8c4;
+                        padding:4px;
+                        border-radius:4px;
+                        font-size:16px;
+                        line-height:20px;
+                        font-weight:600;
+                      ">-{{ item.discount_percentage }}%</span>
+                    </p>
+                  </td>
+                </tr>
+
+                {% else %}
+                <tr>
+                  <td style="padding:0 16px;">
+                    <p style="margin:0; font-size:14px; color:#666;">desde</p>
+                    <p style="margin:0; font-size:20px; font-weight:bold;">{{ item.price }} €</p>
+                  </td>
+                </tr>
+                {% endif %}
+
+                <!-- Espaciador antes del CTA -->
+                <tr><td style="height:16px; line-height:16px; font-size:0;">&#8202;</td></tr>
+
+                <!-- CTA -->
+                <tr>
+                  <td align="center" style="padding:0 16px 16px 16px;">
+                    <a href="{{ item.url | safe }}" target="_blank"
+                       style="background:#ff002d;color:#ffffff;font-size:16px;font-weight:bold;padding:12px 24px;border-radius:999px;display:block;text-align:center;">
+                      {{ item.cta_label }}
+                    </a>
+                  </td>
+                </tr>
+
+                {% if newsletter.card_mode != "vacacional" and item.discount_percentage %}
+                <tr><td style="height:24px; line-height:24px; font-size:0;">&#8202;</td></tr>
+                {% else %}
+                <tr><td style="height:12px; line-height:12px; font-size:0;">&#8202;</td></tr>
+                {% endif %}
+
+              </table>
+            </div>
+
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+</table>
