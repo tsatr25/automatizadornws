@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Revisión Completa - Generador Atrápalo</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #eaeff2; padding: 20px; padding-bottom: 120px; }
+    h2 { color: #333; margin-bottom: 10px; }
+    
+    /* Panel de Configuración Global */
+    .config-panel { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border-left: 5px solid #2c3e50; }
+    .config-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+    .form-group { margin-bottom: 5px; }
+    .form-group label { display: block; font-size: 12px; font-weight: bold; color: #666; margin-bottom: 4px; text-transform: uppercase; }
+    .form-group input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; box-sizing: border-box; }
+    .form-group input:focus { border-color: #e6002c; outline: none; }
+
+    /* Contenedor de la tabla */
+    .table-wrapper { background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow: hidden; }
+    .table-scroll { overflow-x: auto; }
+    
+    table { width: 100%; border-collapse: collapse; min-width: 1600px; } /* Aumentado min-width para que quepan las nuevas columnas */
+    
+    /* Cabecera pegajosa */
+    th { background: #2c3e50; color: white; padding: 12px 10px; text-align: left; font-size: 13px; font-weight: 600; white-space: nowrap; position: sticky; top: 0; z-index: 10; }
+    
+    td { border-bottom: 1px solid #eee; padding: 0; vertical-align: top; }
+    tr:nth-child(even) { background-color: #fcfcfc; }
+    tr:hover { background-color: #f1f7fb; }
+
+    /* Inputs tabla */
+    .table-input { width: 100%; border: none; padding: 12px 10px; font-family: inherit; font-size: 13px; background: transparent; color: #333; box-sizing: border-box; }
+    textarea.table-input { height: 70px; resize: vertical; line-height: 1.4; }
+    .table-input:focus { background: #fffde7; outline: 2px solid #fbc02d; z-index: 5; position: relative; }
+
+    /* Celdas específicas */
+    .cell-id { width: 40px; text-align: center; font-weight: bold; color: #777; background: #f8f9fa; }
+    .cell-title .table-input { font-weight: 600; color: #000; }
+    .cell-desc .table-input { font-size: 12px; color: #555; }
+    .cell-img .table-input { font-size: 11px; color: #0277bd; }
+    .cell-link { text-align: center; vertical-align: middle; padding-top: 15px; }
+
+    /* Alerta visual */
+    .missing-img { background-color: #ffebee !important; border: 2px solid #ef9a9a !important; }
+    .missing-img input::placeholder { color: #c62828; font-weight: bold; }
+
+    /* Barra inferior */
+    .footer-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #ddd; padding: 15px 30px; box-shadow: 0 -4px 20px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; z-index: 100; }
+    
+    .btn-cancel { color: #666; text-decoration: none; font-weight: 600; font-size: 14px; }
+    .btn-download { background: #e6002c; color: white; padding: 12px 35px; text-decoration: none; border-radius: 4px; font-weight: bold; border: none; cursor: pointer; font-size: 16px; transition: background 0.2s; box-shadow: 0 4px 6px rgba(230,0,44,0.3); }
+    .btn-download:hover { background: #c40026; }
+    
+    .stats { font-size: 13px; color: #555; }
+  </style>
+</head>
+<body>
+
+  <form action="/scraper/download" method="POST">
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+      <div>
+        <h2>📝 Configuración y Revisión</h2>
+        <span style="font-size:14px; color:#666;">Rellena los datos de la campaña y revisa los productos.</span>
+      </div>
+    </div>
+
+    <div class="config-panel">
+        <div class="config-grid">
+            <div class="form-group">
+                <label>Localización</label>
+                <input type="text" name="csv_localizacion" placeholder="Ej: BARCELONA" value="BARCELONA">
+            </div>
+            <div class="form-group">
+                <label>Producto</label>
+                <input type="text" name="csv_producto" value="MIXOU">
+            </div>
+            <div class="form-group">
+                <label>Tipo de Envío</label>
+                <input type="text" name="csv_tipo_envio" placeholder="Asunto interno..." value="Ya falta poco para Reyes y tú sin regalo">
+            </div>
+            <div class="form-group">
+                <label>Fecha Envío (FENVIO)</label>
+                <input type="text" name="csv_fenvio" placeholder="YYYY-MM-DD">
+            </div>
+            
+            <div class="form-group">
+                <label>Header Image URL</label>
+                <input type="text" name="csv_header" value="https://nws-images-atrapalo.s3.amazonaws.com/2026/W1/0401_MIXOU/Header020126.png">
+            </div>
+            <div class="form-group">
+                <label>Link Header</label>
+                <input type="text" name="csv_link_header" value="https://www.atrapalo.com/actividades/promociones/esta-navidad-regala-experiencias-/barcelona/?atr_trk=N1-20260104-COM_040126_MIXOU_BCN_UltHorasReyes">
+            </div>
+            
+            <div class="form-group">
+                <label>Asunto (Email)</label>
+                <input type="text" name="csv_asunto" value="¿Sin regalo para Reyes? Regala una experiencia.">
+            </div>
+            <div class="form-group">
+                <label>Preheader</label>
+                <input type="text" name="csv_preheader" value="Nadie sabrá que lo has comprado hoy domingo. Quedas como un rey.">
+            </div>
+
+            <div class="form-group">
+                <label>Texto Botón Footer</label>
+                <input type="text" name="csv_txt_boton" value="Sigue explorando">
+            </div>
+            <div class="form-group">
+                <label>Link Footer</label>
+                <input type="text" name="csv_link_footer" value="https://www.atrapalo.com/actividades/promociones/esta-navidad-regala-experiencias-/barcelona/?atr_trk=N1-20260104-COM_040126_MIXOU_BCN_UltHorasReyes">
+            </div>
+
+            <div class="form-group">
+                <label>Banner Footer URL</label>
+                <input type="text" name="csv_banner" value="https://nws-images-atrapalo.s3.amazonaws.com/2026/W1/0401_MIXOU/FooterInstagram.png">
+            </div>
+            <div class="form-group">
+                <label>Link Banner Footer</label>
+                <input type="text" name="csv_link_banner" value="https://www.instagram.com/p/DSfiyOHj6-8/?img_index=1">
+            </div>
+            
+            <div class="form-group" style="grid-column: span 2;">
+                <label>Condiciones Footer (Opcional)</label>
+                <input type="text" name="csv_condiciones" placeholder="Texto legal extra...">
+            </div>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th width="40">#</th>
+              <th width="200">Título (Max 45)</th>
+              <th width="110">Recinto (M1)</th>
+              <th width="90">Ciudad (M2)</th>
+              <th width="280">Descripción (IA)</th>
+              <th width="60">Precio</th>
+              <th width="60">P.Viejo</th>
+              <th width="40">%</th>
+              <th width="50">Rating</th>
+              <th width="100">Tag</th>
+              <th width="120">Separador</th> <th width="80">CTA</th>        <th width="200">Foto URL (CDN)</th>
+              <th width="40">Link</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr {% if not item.image %}style="background-color:#ffebee"{% endif %}>
+              <td class="cell-id">
+                <input type="number" name="order_{{ loop.index }}" value="{{ loop.index }}" class="table-input" style="text-align:center;">
+              </td>
+              
+              <td class="cell-title">
+                <input type="text" name="title_{{ loop.index }}" value="{{ item.title }}" maxlength="45" class="table-input">
+              </td>
+              
+              <td><input type="text" name="meta1_{{ loop.index }}" value="{{ item.metadata_1 }}" class="table-input"></td>
+              <td><input type="text" name="meta2_{{ loop.index }}" value="{{ item.metadata_2 }}" class="table-input"></td>
+              
+              <td class="cell-desc">
+                <textarea name="desc_{{ loop.index }}" class="table-input">{{ item.description }}</textarea>
+              </td>
+              
+              <td><input type="text" name="price_{{ loop.index }}" value="{{ item.price }}" class="table-input"></td>
+              <td><input type="text" name="price_old_{{ loop.index }}" value="{{ item.price_old }}" class="table-input"></td>
+              <td><input type="text" name="discount_{{ loop.index }}" value="{{ item.discount }}" class="table-input"></td>
+              <td><input type="text" name="rating_{{ loop.index }}" value="{{ item.rating }}" class="table-input"></td>
+              <td><input type="text" name="tag_{{ loop.index }}" value="{{ item.tag }}" class="table-input"></td>
+              
+              <td><input type="text" name="separator_{{ loop.index }}" placeholder="" class="table-input"></td>
+              <td><input type="text" name="cta_{{ loop.index }}" value="Ver plan" class="table-input"></td>
+
+              <td class="cell-img {% if not item.image %}missing-img{% endif %}">
+                <input type="text" name="image_{{ loop.index }}" value="{{ item.image }}" placeholder="⚠️ FALTA URL CDN" class="table-input">
+              </td>
+              
+              <input type="hidden" name="url_{{ loop.index }}" value="{{ item.url }}">
+              
+              <td class="cell-link">
+                <a href="{{ item.url }}" target="_blank" title="Ver ficha original" style="text-decoration:none;">🔗</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <input type="hidden" name="total_items" value="{{ items|length }}">
+
+    <div class="footer-bar">
+      <a href="/scraper" class="btn-cancel">← Cancelar y volver</a>
+      <div class="stats">
+        Se descargarán <strong>{{ items|length }}</strong> productos + Configuración.
+      </div>
+      <button type="submit" class="btn-download">DESCARGAR CSV COMPLETO</button>
+    </div>
+
+  </form>
+
+</body>
+</html>

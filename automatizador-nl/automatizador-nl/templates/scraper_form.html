@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Importar URLs - Generador Atrápalo</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f7f7f7; padding: 40px; }
+    .box { background: white; padding: 30px; border-radius: 8px; max-width: 600px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #ddd; }
+    h2 { margin-top: 0; color: #333; font-size: 22px; }
+    textarea { width: 100%; height: 250px; padding: 15px; border: 1px solid #ccc; border-radius: 6px; font-family: monospace; font-size: 13px; margin-top: 15px; resize: vertical; }
+    button { background: #e6002c; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px; width: 100%; transition: background 0.2s; }
+    button:hover { background: #c40026; }
+    .back { display: block; margin-top: 20px; text-align: center; color: #666; text-decoration: none; font-size: 14px; }
+    .back:hover { text-decoration: underline; }
+    .info-box { font-size: 14px; color: #555; background: #fffec4; padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #fbc02d; line-height: 1.5; }
+  </style>
+</head>
+<body>
+
+  <div class="box">
+    <h2>⚡ Importador Automático</h2>
+    
+    <div class="info-box">
+      <strong>Instrucciones:</strong><br>
+      1. Pega las URLs de los productos de Atrápalo (una por línea).<br>
+      2. El sistema extraerá los datos y usará IA para resumir los textos.<br>
+      3. <strong>Solo se aceptarán imágenes del CDN oficial</strong>.
+    </div>
+    
+    <form action="/scraper/review" method="POST">
+      <label for="urls"><strong>URLs de productos:</strong></label>
+      <textarea name="urls" id="urls" placeholder="https://www.atrapalo.com/entradas/...\nhttps://www.atrapalo.com/actividades/..."></textarea>
+      
+      <button type="submit">Analizar y Revisar →</button>
+    </form>
+    
+    <a href="/" class="back">← Volver al inicio</a>
+  </div>
+
+</body>
+</html>
