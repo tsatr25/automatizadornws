@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Importar URLs</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { 
+        --primary: #FF002D; 
+        --bg: #F4F7F6; 
+    }
+    body { 
+        font-family: 'Poppins', Arial, sans-serif; 
+        background: var(--bg); 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        min-height: 100vh; 
+        margin: 0; 
+        padding: 20px; 
+    }
+    
+    .box { 
+        background: white; 
+        padding: 45px; 
+        border-radius: 16px; 
+        width: 100%; 
+        max-width: 600px; 
+        box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+    }
+    
+    h2 { 
+        margin-top: 0; 
+        color: #111; 
+        font-weight: 700; 
+        letter-spacing: -0.5px; 
+    }
+    
+    .info-box {
+        background: #F0F4FF;
+        border: 1px solid #D9E2FF;
+        color: #3341A5;
+        padding: 18px;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        margin-bottom: 25px;
+        line-height: 1.6;
+    }
+    
+    label { 
+        font-weight: 600; 
+        font-size: 0.95rem; 
+        margin-bottom: 12px; 
+        display: block; 
+        color: #333; 
+    }
+    
+    textarea { 
+        width: 100%; 
+        height: 200px; 
+        padding: 15px; 
+        border: 2px solid #eee; 
+        border-radius: 10px; 
+        font-family: 'Monaco', 'Consolas', monospace; 
+        font-size: 13px; 
+        resize: vertical; 
+        box-sizing: border-box;
+        transition: border-color 0.2s;
+    }
+    textarea:focus { border-color: var(--primary); outline: none; }
+    
+    button { 
+        background: var(--primary); 
+        color: white; 
+        width: 100%; 
+        padding: 16px; 
+        border: none; 
+        border-radius: 10px; 
+        font-size: 1rem; 
+        font-weight: 600; 
+        margin-top: 20px; 
+        cursor: pointer; 
+        transition: transform 0.1s, background 0.2s; 
+        box-shadow: 0 4px 15px rgba(255, 0, 45, 0.25);
+    }
+    button:hover { background: #D60026; transform: translateY(-1px); }
+    
+    .back { 
+        display: block; 
+        text-align: center; 
+        margin-top: 25px; 
+        color: #888; 
+        text-decoration: none; 
+        font-size: 0.9rem; 
+        font-weight: 500;
+    }
+    .back:hover { color: #333; }
+  </style>
+</head>
+<body>
+
+  <div class="box">
+    <h2>Importador de URLs</h2>
+    
+    <div class="info-box">
+      <strong>Cómo funciona:</strong>
+      <ul style="margin: 5px 0 0 20px; padding: 0;">
+        <li>Pega las URLs de <strong>Atrápalo</strong> (una por línea).</li>
+        <li>El sistema extraerá precios, fotos y ubicación.</li>
+        <li>La <strong>IA</strong> redactará descripciones cortas y persuasivas.</li>
+      </ul>
+    </div>
+    
+    <form action="/scraper/review" method="POST">
+      <label for="urls">Lista de Enlaces:</label>
+      <textarea name="urls" id="urls" placeholder="https://www.atrapalo.com/entradas/...\nhttps://www.atrapalo.com/actividades/..."></textarea>
+      
+      <button type="submit">Analizar URLs</button>
+    </form>
+    
+    <a href="/" class="back">Cancelar y volver</a>
+  </div>
+
+</body>
+</html>

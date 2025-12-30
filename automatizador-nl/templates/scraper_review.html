@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Revisión - Generador Atrápalo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { 
+        --primary: #FF002D; 
+        --header-bg: #1e293b; 
+        --border: #e2e8f0; 
+    }
+    
+    body { 
+        font-family: 'Poppins', Arial, sans-serif; 
+        background: #f1f5f9; 
+        margin: 0; 
+        padding: 25px; 
+        padding-bottom: 120px; 
+        color: #334155; 
+    }
+    
+    h2 { font-weight: 700; color: #0f172a; margin-top: 0; }
+    p.subtitle { color: #64748b; margin-top: -10px; margin-bottom: 25px; font-size: 0.95rem; }
+
+    /* PANEL CONFIGURACIÓN */
+    .config-panel { 
+        background: white; 
+        padding: 25px; 
+        border-radius: 12px; 
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
+        margin-bottom: 30px; 
+        border: 1px solid white;
+    }
+    .panel-title { 
+        font-size: 0.8rem; 
+        font-weight: 700; 
+        text-transform: uppercase; 
+        letter-spacing: 1px; 
+        color: var(--primary); 
+        margin-bottom: 15px; 
+        border-bottom: 2px solid #fff0f2; 
+        padding-bottom: 10px; 
+        display: inline-block;
+    }
+    
+    .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+    .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 6px; }
+    .form-group input { 
+        width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; transition: all 0.2s; box-sizing: border-box; font-family: inherit;
+    }
+    .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255, 0, 45, 0.1); outline: none; }
+
+    /* TABLA */
+    .table-container { 
+        background: white; border-radius: 12px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.06); overflow: hidden; border: 1px solid var(--border);
+    }
+    .table-scroll { overflow-x: auto; }
+    
+    table { width: 100%; border-collapse: collapse; min-width: 1600px; font-size: 0.85rem; }
+    
+    th { 
+        background: var(--header-bg); color: white; padding: 18px 12px; text-align: left; 
+        font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.8rem;
+        position: sticky; top: 0; z-index: 10;
+    }
+    
+    td { border-bottom: 1px solid var(--border); padding: 0; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) { background-color: #f8fafc; }
+    tr:hover { background-color: #f1f5f9; }
+
+    /* Inputs dentro de la tabla */
+    .table-input { 
+        width: 100%; border: none; padding: 16px 12px; background: transparent; 
+        font-family: inherit; font-size: 0.9rem; color: #334155; box-sizing: border-box; 
+    }
+    textarea.table-input { resize: vertical; min-height: 60px; line-height: 1.5; }
+    
+    /* Estados de foco */
+    .table-input:focus { background: #fffbeb; outline: 2px solid #fbbf24; position: relative; z-index: 2; }
+    
+    /* Columnas especiales */
+    .col-center { text-align: center; }
+    .cell-title .table-input { font-weight: 600; color: #0f172a; font-size: 0.95rem; }
+    .cell-price input { font-family: 'Monaco', monospace; font-weight: 600; color: #059669; }
+    .cell-img input { font-size: 0.8rem; color: #64748b; }
+    
+    /* Alerta Imagen */
+    .missing-img { background-color: #fef2f2 !important; position: relative; }
+    .missing-img::after { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #ef4444; }
+    .missing-img input::placeholder { color: #ef4444; font-weight: 700; opacity: 0.7; }
+
+    /* FOOTER FIJO */
+    .footer-bar { 
+        position: fixed; bottom: 0; left: 0; width: 100%; 
+        background: white; border-top: 1px solid var(--border); 
+        padding: 20px 40px; box-shadow: 0 -5px 25px rgba(0,0,0,0.05); 
+        display: flex; justify-content: space-between; align-items: center; z-index: 50; 
+        box-sizing: border-box;
+    }
+    
+    .btn-cancel { color: #64748b; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: color 0.2s; }
+    .btn-cancel:hover { color: #0f172a; }
+    
+    .btn-download { 
+        background: var(--primary); color: white; padding: 14px 35px; 
+        border-radius: 8px; font-weight: 600; border: none; cursor: pointer; 
+        font-size: 1rem; box-shadow: 0 5px 15px rgba(255, 0, 45, 0.25); 
+        transition: transform 0.1s, background 0.2s;
+    }
+    .btn-download:hover { background: #D60026; transform: translateY(-2px); }
+  </style>
+</head>
+<body>
+
+  <form action="/scraper/download" method="POST">
+    
+    <div style="margin-bottom: 25px;">
+      <h2>📝 Configuración y Revisión</h2>
+      <p class="subtitle">Ajusta los textos generados por IA y verifica los precios antes de descargar.</p>
+    </div>
+
+    <div class="config-panel">
+        <div class="panel-title">1. Datos de Campaña</div>
+        <div class="config-grid">
+            <div class="form-group"><label>Localización</label><input type="text" name="csv_localizacion" value="BARCELONA"></div>
+            <div class="form-group"><label>Producto</label><input type="text" name="csv_producto" value="MIXOU"></div>
+            <div class="form-group"><label>Asunto Email</label><input type="text" name="csv_asunto" value="¿Sin regalo para Reyes? Regala una experiencia."></div>
+            <div class="form-group"><label>Link Header</label><input type="text" name="csv_link_header" value="https://www.atrapalo.com/"></div>
+            
+            <input type="hidden" name="csv_header" value="https://nws-images-atrapalo.s3.amazonaws.com/2026/W1/0401_MIXOU/Header020126.png">
+            <input type="hidden" name="csv_preheader" value="Texto preheader por defecto">
+            <input type="hidden" name="csv_txt_boton" value="Sigue explorando">
+            <input type="hidden" name="csv_link_footer" value="https://www.atrapalo.com/">
+            <input type="hidden" name="csv_banner" value="https://nws-images-atrapalo.s3.amazonaws.com/2026/W1/0401_MIXOU/FooterInstagram.png">
+            <input type="hidden" name="csv_link_banner" value="https://www.instagram.com/atrapaloes/">
+            <input type="hidden" name="csv_condiciones" value="">
+            <input type="hidden" name="csv_tipo_envio" value="Newsletter">
+            <input type="hidden" name="csv_fenvio" value="">
+        </div>
+    </div>
+
+    <div class="table-container">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th width="50" class="col-center">#</th>
+              <th width="250">Título (Max 45)</th>
+              <th width="140">Recinto</th>
+              <th width="100">Ciudad</th>
+              <th width="350">Descripción (IA)</th>
+              <th width="80">Precio</th>
+              <th width="80">P.Viejo</th>
+              <th width="60">Dto%</th>
+              <th width="60">Rate</th>
+              <th width="120">Tag</th>
+              <th width="120">Separador</th>
+              <th width="100">CTA</th>
+              <th width="250">Imagen (CDN)</th>
+              <th width="50" class="col-center">Link</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr {% if not item.image %}class="missing-img"{% endif %}>
+              <td class="col-center">
+                <input type="number" name="order_{{ loop.index }}" value="{{ loop.index }}" class="table-input" style="text-align:center; color:#94a3b8; font-weight:bold;">
+              </td>
+              
+              <td class="cell-title">
+                <input type="text" name="title_{{ loop.index }}" value="{{ item.title }}" maxlength="45" class="table-input">
+              </td>
+              
+              <td><input type="text" name="meta1_{{ loop.index }}" value="{{ item.metadata_1 }}" class="table-input"></td>
+              <td><input type="text" name="meta2_{{ loop.index }}" value="{{ item.metadata_2 }}" class="table-input"></td>
+              
+              <td><textarea name="desc_{{ loop.index }}" class="table-input">{{ item.description }}</textarea></td>
+              
+              <td class="cell-price"><input type="text" name="price_{{ loop.index }}" value="{{ item.price }}" class="table-input"></td>
+              <td class="cell-price"><input type="text" name="price_old_{{ loop.index }}" value="{{ item.price_old }}" class="table-input" style="color:#94a3b8; text-decoration:line-through;"></td>
+              <td><input type="text" name="discount_{{ loop.index }}" value="{{ item.discount }}" class="table-input" style="color:#FF002D; font-weight:bold;"></td>
+              <td><input type="text" name="rating_{{ loop.index }}" value="{{ item.rating }}" class="table-input"></td>
+              <td><input type="text" name="tag_{{ loop.index }}" value="{{ item.tag }}" class="table-input"></td>
+              
+              <td><input type="text" name="separator_{{ loop.index }}" class="table-input" placeholder="Opcional"></td>
+              <td><input type="text" name="cta_{{ loop.index }}" value="Ver plan" class="table-input"></td>
+
+              <td>
+                <input type="text" name="image_{{ loop.index }}" value="{{ item.image }}" placeholder="PEGAR URL AQUÍ" class="table-input">
+              </td>
+              
+              <input type="hidden" name="url_{{ loop.index }}" value="{{ item.url }}">
+              
+              <td class="col-center" style="padding-top:14px;">
+                <a href="{{ item.url }}" target="_blank" style="text-decoration:none; opacity:0.5; font-size:1.2rem;">🔗</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <input type="hidden" name="total_items" value="{{ items|length }}">
+
+    <div class="footer-bar">
+      <a href="/scraper" class="btn-cancel">Cancelar y volver</a>
+      <span style="font-size:0.9rem; color:#64748b;">
+        Mostrando <strong>{{ items|length }}</strong> productos extraídos.
+      </span>
+      <button type="submit" class="btn-download">Descargar CSV Final →</button>
+    </div>
+
+  </form>
+
+</body>
+</html>
