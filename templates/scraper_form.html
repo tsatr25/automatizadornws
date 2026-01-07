@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Gestor de Campañas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+  <style>
+    /* VARIABLES UNIFICADAS */
+    :root { 
+        --primary: #FF002D; 
+        --primary-dark: #D60026;
+        --success: #10B981; 
+        --text-main: #1F2937;
+        --text-sec: #6B7280;
+        --bg: #F3F4F6; 
+        --border: #E5E7EB;
+        --input-bg: #F9FAFB;
+        --input-border: #D1D5DB;
+    }
+    
+    body { 
+        font-family: 'Poppins', sans-serif; 
+        background: var(--bg); 
+        margin: 0; 
+        padding: 40px; 
+        display: flex; 
+        flex-direction: column; 
+        height: 100vh; 
+        box-sizing: border-box;
+        color: var(--text-main);
+    }
+    
+    a { text-decoration: none; color: inherit; }
+
+    /* --- CABECERA REESTRUCTURADA (SIN SOLAPAMIENTOS) --- */
+    .create-section {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 24px 32px;
+        margin-bottom: 30px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        display: flex;
+        flex-direction: column; /* Cambiado a columna para orden */
+        gap: 20px;
+    }
+
+    /* Fila superior: Título y Botón Archivo */
+    .header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    .header-info h2 { margin: 0 0 5px 0; font-size: 1.25rem; font-weight: 600; color: #111; }
+    .header-info p { margin: 0; font-size: 0.9rem; color: var(--text-sec); }
+
+    .btn-archive {
+        background: white;
+        border: 1px solid var(--border);
+        color: var(--text-sec);
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.85rem;
+        transition: 0.2s;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-archive:hover { background: #F9FAFB; color: #111; border-color: #9CA3AF; }
+
+    /* Fila inferior: Formulario */
+    .create-form {
+        display: flex;
+        gap: 12px;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    textarea {
+        flex-grow: 1;
+        height: 50px;
+        padding: 12px;
+        border: 1px solid var(--input-border);
+        border-radius: 6px;
+        font-family: 'Poppins', sans-serif;
+        font-size: 0.9rem;
+        background: var(--input-bg);
+        box-sizing: border-box;
+        resize: none;
+        transition: border-color 0.2s;
+    }
+    textarea:focus { outline: none; border-color: var(--primary); background: white; }
+
+    button.btn-primary {
+        padding: 0 24px;
+        background: var(--primary);
+        color: white;
+        font-size: 0.95rem;
+        font-weight: 500;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s;
+        white-space: nowrap;
+    }
+    button.btn-primary:hover { background: var(--primary-dark); }
+
+    .btn-back-link {
+        font-size: 0.85rem; font-weight: 500; color: var(--text-sec); display: inline-block; margin-top: 5px;
+    }
+    .btn-back-link:hover { color: var(--primary); }
+
+
+    /* --- KANBAN (2 COLUMNAS) --- */
+    .kanban-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        flex-grow: 1;
+        min-height: 0;
+    }
+
+    .column {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        background: #E5E7EB;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+    }
+
+    .column-header {
+        padding: 14px 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .col-draft .column-header { background: #6B7280; }
+    .col-ready .column-header { background: var(--success); }
+
+    .column-body { padding: 16px; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 12px; }
+
+    /* TARJETAS */
+    .task-card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 16px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        cursor: grab;
+        transition: transform 0.2s, box-shadow 0.2s;
+        position: relative;
+        border-left: 4px solid transparent;
+    }
+    .task-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-color: #D1D5DB; }
+    .task-card:active { cursor: grabbing; }
+
+    .col-draft .task-card { border-left-color: #9CA3AF; }
+    .col-ready .task-card { border-left-color: var(--success); }
+
+    .card-title { font-size: 0.95rem; font-weight: 500; color: #111; margin-bottom: 12px; word-break: break-all; display: block; }
+
+    .card-actions { display: flex; justify-content: flex-end; gap: 15px; border-top: 1px solid #F3F4F6; padding-top: 10px; }
+
+    .action-link { font-size: 0.8rem; font-weight: 500; color: var(--text-sec); transition: color 0.2s; cursor: pointer; }
+    .action-link:hover { color: var(--primary); }
+    
+    .action-link.archive { color: #F59E0B; } /* Color ámbar para archivar */
+    .action-link.archive:hover { color: #D97706; }
+
+    .action-link.delete { color: #EF4444; }
+    .action-link.delete:hover { color: #DC2626; }
+
+    .count { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; }
+    .sortable-ghost { opacity: 0.5; background: #F3F4F6; border: 1px dashed #999; }
+
+    @media (max-width: 1000px) {
+        .kanban-container { grid-template-columns: 1fr; }
+        .header-top { flex-direction: column; gap: 15px; }
+        .btn-archive { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="create-section">
+    
+    <div class="header-top">
+        <div class="header-info">
+            <h2>Nuevo Proyecto</h2>
+            <p>Pega URLs para importar datos.</p>
+            <a href="/" class="btn-back-link">← Volver al Panel</a>
+        </div>
+        <a href="/scraper/archive" class="btn-archive">
+            <span>📂</span> Ir al Archivo
+        </a>
+    </div>
+
+    <form action="/scraper/review" method="POST" class="create-form">
+        <textarea name="urls" placeholder="https://www.atrapalo.com/entradas/..."></textarea>
+        <button type="submit" class="btn-primary">Analizar URLs</button>
+    </form>
+  </div>
+
+  <div class="kanban-container">
+    
+    <div class="column col-draft">
+      <div class="column-header">
+        <span>Borradores</span>
+        <span class="count" id="count-pending">{{ drafts_pending|length }}</span>
+      </div>
+      <div class="column-body" id="list-pending" data-status="pending">
+        {% for d in drafts_pending %}
+        <div class="task-card" data-filename="{{ d }}">
+          <a href="/load_draft/{{ d }}" class="card-title">{{ d }}</a>
+          <div class="card-actions">
+            <a href="/load_draft/{{ d }}" class="action-link">Editar</a>
+            <span class="action-link archive" onclick="archiveItem('{{ d }}')">Archivar</span>
+            <a href="/delete_draft/{{ d }}" class="action-link delete" onclick="return confirm('¿Eliminar?');">Eliminar</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="column col-ready">
+      <div class="column-header">
+        <span>Producción</span>
+        <span class="count" id="count-ready">{{ drafts_ready|length }}</span>
+      </div>
+      <div class="column-body" id="list-ready" data-status="ready">
+        {% for d in drafts_ready %}
+        <div class="task-card" data-filename="{{ d }}">
+          <a href="/load_draft/{{ d }}" class="card-title">{{ d }}</a>
+          <div class="card-actions">
+            <a href="/load_draft/{{ d }}" class="action-link">Editar</a>
+            <span class="action-link archive" onclick="archiveItem('{{ d }}')">Archivar</span>
+            <a href="/delete_draft/{{ d }}" class="action-link delete" onclick="return confirm('¿Eliminar?');">Eliminar</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // FUNCIÓN PARA EL BOTÓN "ARCHIVAR"
+    function archiveItem(filename) {
+        if(!confirm('¿Mover "' + filename + '" al archivo?')) return;
+
+        fetch('/api/update_status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename: filename, status: 'archived' })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                // Recargar para que desaparezca de la lista
+                location.reload();
+            } else {
+                alert("Error al archivar.");
+            }
+        })
+        .catch(err => console.error(err));
+    }
+
+    // LOGICA DRAG & DROP EXISTENTE
+    document.addEventListener('DOMContentLoaded', function () {
+        const lists = [
+            document.getElementById('list-pending'),
+            document.getElementById('list-ready')
+        ];
+
+        lists.forEach(el => {
+            new Sortable(el, {
+                group: 'kanban', 
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                onAdd: function (evt) {
+                    const item = evt.item;
+                    const filename = item.getAttribute('data-filename');
+                    const newStatus = evt.to.getAttribute('data-status');
+                    updateStatus(filename, newStatus);
+                    updateCounts();
+                },
+                onRemove: function() { updateCounts(); }
+            });
+        });
+
+        function updateStatus(filename, status) {
+            fetch('/api/update_status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filename: filename, status: status })
+            })
+            .then(res => res.json())
+            .then(data => { if(!data.success) alert("Error al guardar."); })
+            .catch(err => console.error(err));
+        }
+
+        function updateCounts() {
+            document.getElementById('count-pending').innerText = document.getElementById('list-pending').children.length;
+            document.getElementById('count-ready').innerText = document.getElementById('list-ready').children.length;
+        }
+    });
+  </script>
+
+</body>
+</html>

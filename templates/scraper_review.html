@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Editor de Campaña</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+  <style>
+    :root { 
+        --primary: #FF002D; 
+        --primary-dark: #D60026;
+        --success: #00C853; 
+        --archive: #607d8b; 
+        --header-bg: #1F2937; 
+        --border: #E5E7EB;
+    }
+    body { font-family: 'Poppins', sans-serif; background: #F9FAFB; margin: 0; padding: 30px; padding-bottom: 120px; color: #1F2937; }
+    
+    h2 { font-weight: 700; margin-top: 0; font-size: 1.5rem; }
+    p.subtitle { color: #6B7280; margin-top: -10px; margin-bottom: 30px; font-size: 0.95rem; }
+    
+    .alert-box { background: #ECFDF5; border: 1px solid #D1FAE5; color: #065F46; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-weight: 500; font-size: 0.9rem; }
+
+    /* PANEL */
+    .config-panel { background: white; padding: 25px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 30px; }
+    .panel-title { font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--primary); margin-bottom: 20px; border-bottom: 1px solid #F3F4F6; padding-bottom: 10px; }
+    
+    .config-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    .form-group label { display: block; font-size: 0.75rem; font-weight: 600; color: #4B5563; margin-bottom: 6px; text-transform: uppercase; }
+    .form-group input { width: 100%; padding: 8px 12px; border: 1px solid #D1D5DB; border-radius: 4px; font-size: 0.9rem; box-sizing: border-box; font-family: inherit; }
+    .form-group input:focus { border-color: var(--primary); outline: none; }
+
+    /* TABLA */
+    .table-container { background: white; border-radius: 8px; border: 1px solid var(--border); overflow: hidden; }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 1600px; font-size: 0.85rem; }
+    th { background: var(--header-bg); color: white; padding: 12px 16px; text-align: left; font-weight: 500; font-size: 0.8rem; position: sticky; top: 0; z-index: 10; }
+    td { border-bottom: 1px solid var(--border); padding: 0; vertical-align: top; background: white; }
+    
+    .handle { cursor: grab; color: #9CA3AF; text-align: center; padding-top: 12px !important; font-size: 1.2rem; }
+    .handle:hover { color: var(--text-main); }
+
+    .table-input { width: 100%; border: none; padding: 12px 16px; background: transparent; font-family: inherit; font-size: 0.9rem; color: #1F2937; box-sizing: border-box; }
+    textarea.table-input { resize: vertical; min-height: 50px; line-height: 1.5; }
+    .table-input:focus { background: #FEF2F2; outline: 1px solid var(--primary); z-index: 2; position: relative; }
+    
+    .missing-img { background-color: #FEF2F2 !important; }
+    .missing-img input::placeholder { color: #DC2626; font-weight: 500; }
+
+    /* FOOTER */
+    .footer-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid var(--border); padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 50; box-sizing: border-box; box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.05); }
+    
+    .btn-back { color: #6B7280; font-weight: 500; font-size: 0.9rem; text-decoration: none; }
+    .btn-back:hover { color: #111; }
+
+    .right-actions { display: flex; gap: 12px; align-items: center; }
+    
+    button { padding: 10px 20px; border-radius: 6px; font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: 0.2s; border: none; }
+    
+    .btn-save { background: white; border: 1px solid #D1D5DB; color: #374151; }
+    .btn-save:hover { background: #F9FAFB; border-color: #9CA3AF; }
+    
+    .btn-update { background: #EFF6FF; border: 1px solid #BFDBFE; color: #1D4ED8; }
+    .btn-update:hover { background: #DBEAFE; }
+    
+    .btn-download { background: var(--primary); color: white; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); }
+    .btn-download:hover { background: var(--primary-dark); }
+
+    /* SELECTOR ESTADO */
+    .status-selector { display: flex; background: #E5E7EB; border-radius: 6px; padding: 4px; gap: 2px; margin-right: 20px; }
+    .status-selector input { display: none; }
+    .status-selector label { padding: 6px 12px; font-size: 0.8rem; font-weight: 600; color: #6B7280; cursor: pointer; border-radius: 4px; transition: 0.1s; }
+    
+    #st_pending:checked + label { background: white; color: #111; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+    #st_ready:checked + label { background: var(--success); color: white; }
+    #st_archived:checked + label { background: var(--archive); color: white; }
+  </style>
+</head>
+<body>
+
+  <form method="POST" id="mainForm">
+    
+    <div style="margin-bottom: 20px;">
+      <h2>Editor de Campaña</h2>
+      <p class="subtitle">{% if draft_name %}Archivo: <strong>{{ draft_name }}</strong>{% else %}Nuevo Proyecto{% endif %}</p>
+      {% if message %}<div class="alert-box">{{ message }}</div>{% endif %}
+    </div>
+
+    <div class="config-panel">
+        <div class="panel-title">Configuración General</div>
+        <div class="config-grid">
+            <div class="form-group"><label>Nombre Envío</label><input type="text" name="csv_localizacion" value="{{ config.csv_localizacion }}"></div>
+            <div class="form-group"><label>Producto</label><input type="text" name="csv_producto" value="{{ config.csv_producto }}"></div>
+            <div class="form-group"><label>Tipo de Envío</label><input type="text" name="csv_tipo_envio" value="{{ config.csv_tipo_envio }}"></div>
+            <div class="form-group"><label>Fecha Envío</label><input type="date" name="csv_fenvio" value="{{ config.csv_fenvio }}"></div>
+            
+            <div class="form-group"><label>Header URL</label><input type="text" name="csv_header" value="{{ config.csv_header }}"></div>
+            <div class="form-group"><label>Link Header</label><input type="text" name="csv_link_header" value="{{ config.csv_link_header }}"></div>
+            <div class="form-group"><label>Asunto Email</label><input type="text" name="csv_asunto" value="{{ config.csv_asunto }}"></div>
+            <div class="form-group"><label>Preheader</label><input type="text" name="csv_preheader" value="{{ config.csv_preheader }}"></div>
+            <div class="form-group"><label>Texto Botón Footer</label><input type="text" name="csv_txt_boton" value="{{ config.csv_txt_boton }}"></div>
+            <div class="form-group"><label>Link Footer</label><input type="text" name="csv_link_footer" value="{{ config.csv_link_footer }}"></div>
+            <div class="form-group"><label>Banner Footer URL</label><input type="text" name="csv_banner" value="{{ config.csv_banner }}"></div>
+            <div class="form-group"><label>Link Banner</label><input type="text" name="csv_link_banner" value="{{ config.csv_link_banner }}"></div>
+            <input type="hidden" name="csv_condiciones" value="{{ config.csv_condiciones }}">
+        </div>
+    </div>
+
+    <div class="table-container">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th width="30"></th>
+              <th width="40" class="col-center">#</th>
+              <th width="250">Título</th>
+              <th width="140">Recinto</th>
+              <th width="100">Ciudad</th>
+              <th width="350">Descripción</th>
+              <th width="80">Precio</th>
+              <th width="80">P.Viejo</th>
+              <th width="60">Dto%</th>
+              <th width="60">Rate</th>
+              <th width="120">Tag</th>
+              <th width="120">Separador</th>
+              <th width="100">CTA</th>
+              <th width="250">Imagen</th>
+              <th width="50" class="col-center">Link</th>
+            </tr>
+          </thead>
+          <tbody id="sortable-rows">
+            {% for item in items %}
+            <tr {% if not item.image %}class="missing-img"{% endif %}>
+              <td class="handle">::</td>
+              <td class="col-center">
+                <input type="number" name="order_{{ loop.index }}" value="{{ item.order or loop.index }}" class="table-input" style="text-align:center;" readonly>
+              </td>
+              <td class="cell-title"><input type="text" name="title_{{ loop.index }}" value="{{ item.title }}" maxlength="45" class="table-input"></td>
+              <td><input type="text" name="meta1_{{ loop.index }}" value="{{ item.metadata_1 }}" class="table-input"></td>
+              <td><input type="text" name="meta2_{{ loop.index }}" value="{{ item.metadata_2 }}" class="table-input"></td>
+              <td><textarea name="desc_{{ loop.index }}" class="table-input">{{ item.description }}</textarea></td>
+              <td class="cell-price"><input type="text" name="price_{{ loop.index }}" value="{{ item.price }}" class="table-input"></td>
+              <td class="cell-price"><input type="text" name="price_old_{{ loop.index }}" value="{{ item.price_old }}" class="table-input"></td>
+              <td><input type="text" name="discount_{{ loop.index }}" value="{{ item.discount }}" class="table-input" style="color:#FF002D; font-weight:600;"></td>
+              <td><input type="text" name="rating_{{ loop.index }}" value="{{ item.rating }}" class="table-input"></td>
+              <td><input type="text" name="tag_{{ loop.index }}" value="{{ item.tag }}" class="table-input"></td>
+              <td><input type="text" name="separator_{{ loop.index }}" value="{{ item.separator }}" class="table-input"></td>
+              <td><input type="text" name="cta_{{ loop.index }}" value="{{ item.cta or 'Ver plan' }}" class="table-input"></td>
+              <td><input type="text" name="image_{{ loop.index }}" value="{{ item.image }}" class="table-input" placeholder="URL Imagen"></td>
+              <input type="hidden" name="url_{{ loop.index }}" value="{{ item.url }}">
+              <td class="col-center"><a href="{{ item.url }}" target="_blank" style="text-decoration:none; opacity:0.5;">🔗</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <input type="hidden" name="total_items" value="{{ items|length }}" id="total_items">
+
+    <div class="footer-bar">
+      <a href="/scraper" class="btn-back">Volver al listado</a>
+      
+      <div class="right-actions">
+        <div class="status-selector">
+            <input type="radio" name="status_choice" id="st_pending" value="pending" {% if current_status == 'pending' %}checked{% endif %}>
+            <label for="st_pending">Borrador</label>
+            <input type="radio" name="status_choice" id="st_ready" value="ready" {% if current_status == 'ready' %}checked{% endif %}>
+            <label for="st_ready">Producción</label>
+            <input type="radio" name="status_choice" id="st_archived" value="archived" {% if current_status == 'archived' %}checked{% endif %}>
+            <label for="st_archived">Archivado</label>
+        </div>
+
+        <input type="text" name="draft_name" placeholder="Nombre del archivo" value="{{ draft_name }}" style="padding:10px; border:1px solid #D1D5DB; border-radius:6px; width:200px;">
+        
+        <button type="submit" formaction="/save_draft" class="btn-save">Guardar Cambios</button>
+        <button type="submit" formaction="/update_prices" class="btn-update">Actualizar Precios</button>
+        <button type="submit" formaction="/scraper/download" class="btn-download">Descargar CSV</button>
+      </div>
+    </div>
+
+  </form>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var el = document.getElementById('sortable-rows');
+        if(el){
+            var sortable = new Sortable(el, {
+                handle: '.handle',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                onEnd: function (evt) { reindexRows(); }
+            });
+        }
+
+        function reindexRows() {
+            var rows = document.querySelectorAll('#sortable-rows tr');
+            rows.forEach(function (row, index) {
+                var newIdx = index + 1;
+                var orderInput = row.querySelector('input[name^="order_"]');
+                if(orderInput) orderInput.value = newIdx;
+
+                var inputs = row.querySelectorAll('input, textarea');
+                inputs.forEach(function(input) {
+                    var name = input.getAttribute('name');
+                    if (name) {
+                        var newName = name.replace(/_\d+$/, '_' + newIdx);
+                        input.setAttribute('name', newName);
+                    }
+                });
+            });
+        }
+    });
+  </script>
+
+</body>
+</html>
