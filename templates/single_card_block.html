@@ -44,7 +44,7 @@
                       display:inline-block;
                       border-radius:4px;
                       {% if item.badge_color %}background-color: {{ item.badge_color }};{% endif %}
-                      color:{% if item.badge_text == 'Oferta exclusiva' %}#222222{% else %}#FFFFFF{% endif %};
+                      color:{% if item.badge_text == 'Oferta exclusiva' %}#222222{% elif item.badge_color == '#DAF7E6' %}#007d49{% else %}#FFFFFF{% endif %};
                       padding:2px 8px;
                       font-size:12px;
                       line-height:18px;

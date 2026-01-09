@@ -629,12 +629,21 @@ def force_spanish_format(val):
 def inject_tracking(url, campaign_name, date_str):
     if not url: return ""
     base_url = url.split("?")[0]
-    match = re.search(r"_(e|a)(\d+)", base_url)
-    if match:
-        identifier = match.group(2)
-    else:
+    
+    # LÓGICA HÍBRIDA:
+    # 1. Si es HOTEL -> Usar fecha (ignorar ID)
+    if "/hoteles/" in base_url or "/hotel/" in base_url:
         if date_str: identifier = date_str.replace("-", "")
         else: identifier = time.strftime("%Y%m%d")
+        
+    # 2. Si es OCIO -> Usar ID si existe
+    else:
+        match = re.search(r"_(e|a)(\d+)", base_url)
+        if match:
+            identifier = match.group(2)
+        else:
+            if date_str: identifier = date_str.replace("-", "")
+            else: identifier = time.strftime("%Y%m%d")
     
     camp = campaign_name.strip() if campaign_name else "CAMPAÑA"
     tracking_param = f"atr_trk=N1-{identifier}-{camp}"
@@ -715,5 +724,19 @@ def scraper_download():
 def uploaded_files(filename):
     return send_file(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
+import webbrowser
+from threading import Timer
+
+def open_browser():
+    webbrowser.open_new("http://127.0.0.1:5000")
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Configuración de modo debug
+    debug_mode = True
+    
+    # Solo abrir navegador si NO es debug (proceso único) 
+    # O si es el proceso hijo del reloader (WERKZEUG_RUN_MAIN = true)
+    if not debug_mode or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+        Timer(1, open_browser).start()
+        
+    app.run(debug=debug_mode)

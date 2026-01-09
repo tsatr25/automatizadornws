@@ -6,6 +6,13 @@ BADGE_COLORS = {
     "Oferta exclusiva Flash": "#FCC905",
     "Novedad": "#027D49",
     "Fecha única": "#96298D",
+    # TAGS HOTELES (Fondo Verde Claro)
+    "Spa": "#DAF7E6",
+    "A pie de pistas": "#DAF7E6",
+    "Desayuno": "#DAF7E6",
+    "Con Desayuno": "#DAF7E6",
+    "Piscina": "#DAF7E6",
+    "Todo Incluido": "#DAF7E6",
 }
 
 MAX_DESCRIPTION_CHARS = 150

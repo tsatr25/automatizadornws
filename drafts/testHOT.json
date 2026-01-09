@@ -1,7 +1,7 @@
 {
     "meta": {
-        "status": "pending",
-        "updated_at": 1767627092.9427052
+        "status": "archived",
+        "updated_at": 1767959125.382775
     },
     "config": {
         "csv_localizacion": "",
@@ -25,13 +25,13 @@
             "metadata_1": "Hotel 3* en hab. doble",
             "metadata_2": "",
             "description": "",
-            "image": "",
+            "image": "https://cdn.atrapalo.com/common/photo/event/4/8/7/4057/1737462/vertic_880_0.jpg?width=600&height=315&quality=75&auto=avif",
             "url": "https://www.atrapalo.com/hoteles/4273-0_hotel-montarto?atr_trk=N1-20251218-COM_181225_HOT_HotelesdeNieve",
             "discount": "",
             "price_old": "",
             "price": "",
             "tag": "Sin tag",
-            "rating": "",
+            "rating": "9.60 - Extraordinario",
             "separator": "",
             "cta": "Ver hotel"
         },
