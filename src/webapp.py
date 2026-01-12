@@ -11,6 +11,7 @@ from flask import Flask, render_template_string, request, send_file, render_temp
 from src.csv_parser import csv_to_newsletter_dict
 from src.renderer import render_newsletter
 from src.scraper import get_atrapalo_data
+from src.marketing import TrackingGenerator, ImageResizer
 
 
 # ============================================================
@@ -70,10 +71,15 @@ def index():
             }
 
             header {
-                margin-bottom: 40px;
+                margin-bottom: 30px;
                 border-bottom: 1px solid #E5E7EB;
                 padding-bottom: 20px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
             }
+            
+            .header-info { flex: 1; }
 
             h1 { 
                 font-weight: 600; 
@@ -191,6 +197,14 @@ def index():
                 background: #FFF5F5;
             }
 
+            .btn-small {
+                width: fit-content !important;
+                padding: 12px 20px !important;
+                font-size: 0.9rem !important;
+                height: auto !important;
+                margin-left: auto;
+            }
+
             @media (max-width: 768px) {
                 .grid { grid-template-columns: 1fr; }
             }
@@ -200,8 +214,11 @@ def index():
 
         <div class="container">
             <header>
-                <h1>Panel de Control</h1>
-                <p class="subtitle">Sistema de gestión y automatización de newsletters</p>
+                <div class="header-info">
+                    <h1>Panel de Control</h1>
+                    <p class="subtitle">Sistema de gestión y automatización de newsletters</p>
+                </div>
+                <a href="/marketing" class="btn btn-outline btn-small">Marketing Tools</a>
             </header>
 
             <div class="grid">
@@ -249,8 +266,8 @@ def index():
                         <button type="submit" class="btn btn-outline">Generar HTML</button>
                     </form>
                 </div>
-
             </div>
+
         </div>
 
     </body>
@@ -718,7 +735,63 @@ def scraper_download():
     output.headers["Content-Disposition"] = "attachment; filename=input_scraped.csv"
     # AQUÍ ESTABA EL ERROR, CORREGIDO:
     output.headers["Content-type"] = "text/csv; charset=utf-8-sig"
+    output.headers["Content-type"] = "text/csv; charset=utf-8-sig"
     return output
+
+
+# ============================================================
+#   FASE 3: MARKETING TOOLS
+# ============================================================
+
+@app.route("/marketing", methods=["GET"])
+def marketing_index():
+    return render_template("marketing_index.html")
+
+@app.route("/marketing/tracking", methods=["POST"])
+def marketing_tracking():
+    channel = request.form.get("channel")
+    urls_raw = request.form.get("urls", "").strip()
+    campaign = request.form.get("campaign", "").strip()
+    source = request.form.get("source", "APP") 
+    product = request.form.get("product", "Entradas") 
+    social_network = request.form.get("social_network", "instagram") 
+    format_type = request.form.get("format", "stories") 
+    date_str = request.form.get("date_str") 
+
+    urls = [u.strip() for u in urls_raw.splitlines() if u.strip()]
+    results = []
+
+    for url in urls:
+        final_url = TrackingGenerator.generate_tracking(
+            url, channel, campaign, 
+            source=source, product=product, 
+            social_network=social_network, format=format_type,
+            date_str=date_str
+        )
+        results.append({"original": url, "final": final_url})
+    
+    return render_template("marketing_result.html", 
+                           result_type="Tracking",
+                           results=results)
+
+@app.route("/marketing/resize", methods=["POST"])
+def marketing_resize():
+    urls_raw = request.form.get("urls", "").strip()
+    width = request.form.get("width", "")
+    quality = request.form.get("quality", "75")
+    
+    urls = [u.strip() for u in urls_raw.splitlines() if u.strip()]
+    results = []
+
+    for url in urls:
+        final_url = ImageResizer.resize_atrapalo_url(url, width=width, quality=quality)
+        results.append({"original": url, "final": final_url})
+    
+    return render_template("marketing_result.html", 
+                           result_type="Redimensionador CDN",
+                           results=results,
+                           preview_image=True)
+
 
 @app.route("/uploads/<path:filename>")
 def uploaded_files(filename):

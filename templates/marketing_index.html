@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Marketing Tools - Automatizador</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF002D;
+            --primary-dark: #D60026;
+            --text-main: #1F2937;
+            --text-sec: #6B7280;
+            --bg: #F3F4F6;
+            --border: #E5E7EB;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg);
+            margin: 0;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            padding-top: 60px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 960px;
+            width: 100%;
+            padding: 0 20px 40px 20px;
+        }
+
+        header {
+            margin-bottom: 30px;
+            border-bottom: 1px solid #E5E7EB;
+            padding-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        h1 {
+            font-weight: 600;
+            font-size: 1.5rem;
+            margin: 0;
+            color: #111;
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: var(--text-sec);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #111;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .card-desc {
+            font-size: 0.85rem;
+            color: var(--text-sec);
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #374151;
+            margin-top: 15px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #D1D5DB;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            box-sizing: border-box;
+            background: #F9FAFB;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #D1D5DB;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            box-sizing: border-box;
+            background: #F9FAFB;
+            resize: vertical;
+        }
+
+        .btn {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 12px 20px;
+            background: var(--primary);
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 500;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 25px;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .hidden-fields {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <script>
+        function toggleFields() {
+            const channel = document.getElementById("channel_select").value;
+            const n27Div = document.getElementById("fields_n27");
+            const a2Div = document.getElementById("fields_a2");
+
+            n27Div.style.display = "none";
+            a2Div.style.display = "none";
+
+            if (channel === "push_n27") {
+                n27Div.style.display = "block";
+            } else if (channel === "social_a2") {
+                a2Div.style.display = "block";
+            }
+        }
+    </script>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <div>
+                <h1>Marketing Tools</h1>
+                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9rem;">Genera enlaces trackeados y redimensiona
+                    imágenes</p>
+            </div>
+            <a href="/" class="back-link">← Volver al Panel</a>
+        </header>
+
+        <div class="grid">
+
+            <!-- TRACKING GENERATOR -->
+            <div class="card">
+                <div class="card-title">Generador de Tracking</div>
+                <div class="card-desc">Crea enlaces con parámetros `atr_trk` y UTMs para Push, Web o Redes Sociales.
+                </div>
+
+                <form action="/marketing/tracking" method="POST">
+                    <label>URLs Originales (una por línea)</label>
+                    <textarea name="urls" placeholder="https://www.atrapalo.com/...
+https://www.atrapalo.com/..." rows="5" required></textarea>
+
+                    <label>Canal / Estrategia</label>
+                    <select name="channel" id="channel_select" onchange="toggleFields()">
+                        <option value="push_n27">Push App / Web (N27)</option>
+                        <option value="social_a2">Redes Sociales (A2)</option>
+                        <option value="generic">Genérico (Solo limpia URL)</option>
+                    </select>
+
+                    <label>Nombre Campaña</label>
+                    <input type="text" name="campaign" placeholder="Ej: BlackFriday" required>
+
+                    <label>Fecha de Envío / Publicación</label>
+                    <input type="date" name="date_str" id="date_input">
+                    <script>
+                        // Poner fecha de hoy por defecto
+                        document.getElementById('date_input').valueAsDate = new Date();
+                    </script>
+
+                    <!-- FIELDS N27 -->
+                    <div id="fields_n27">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div>
+                                <label>Producto (editable)</label>
+                                <input type="text" name="product" list="product_list"
+                                    placeholder="Selecciona o escribe...">
+                                <datalist id="product_list">
+                                    <option value="Entradas">
+                                    <option value="Hoteles">
+                                    <option value="Vuelos">
+                                    <option value="Viajes">
+                                    <option value="Actividades">
+                                    <option value="Restaurantes">
+                                </datalist>
+                            </div>
+                            <div>
+                                <label>Source</label>
+                                <select name="source">
+                                    <option value="APP">APP</option>
+                                    <option value="WEB">WEB</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FIELDS A2 -->
+                    <div id="fields_a2" class="hidden-fields">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div>
+                                <label>Red Social</label>
+                                <select name="social_network">
+                                    <option value="instagram">Instagram</option>
+                                    <option value="facebook">Facebook</option>
+                                    <option value="tiktok">TikTok</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Formato</label>
+                                <select name="format">
+                                    <option value="stories">Stories</option>
+                                    <option value="feed">Feed / Post</option>
+                                    <option value="bio">Link in Bio</option>
+                                    <option value="reels">Reels</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn">Generar Enlace</button>
+                </form>
+            </div>
+
+            <!-- IMAGE RESIZER -->
+            <div class="card">
+                <div class="card-title">Redimensionador CDN</div>
+                <div class="card-desc">Añade parámetros a las imágenes de Atrápalo para optimizarlas y cambiar su
+                    tamaño.</div>
+
+                <form action="/marketing/resize" method="POST">
+                    <label>URLs de Imágenes Atrápalo (una por línea)</label>
+                    <textarea name="urls" placeholder="https://cdn.atrapalo.com/...
+https://cdn.atrapalo.com/..." rows="5" required></textarea>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label>Ancho (px)</label>
+                            <input type="number" name="width" placeholder="Ej: 1080">
+                        </div>
+                        <div>
+                            <label>Calidad (0-100)</label>
+                            <input type="number" name="quality" value="75">
+                        </div>
+                    </div>
+
+                    <p style="font-size: 0.8rem; color: #888; margin-top: 10px;">
+                        Nota: Se forzará el formato <b>AVIF</b> automáticamente.
+                    </p>
+
+                    <button type="submit" class="btn">Obtener Imagen</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+
+</html>
