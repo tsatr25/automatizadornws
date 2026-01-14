@@ -1,3 +1,14 @@
+"""
+Web Application Controller
+Main entry point for the Newsletter Automation tool.
+Manages routes for:
+- CSV-based newsletter generation.
+- Visual editor with real-time editing and alignment.
+- Scraper system and Kanban board for draft management.
+- Persistent archives for both scraper and visual editor.
+- Marketing tools (Image resizer, Tracking applicator).
+"""
+
 import os
 import csv
 import io
@@ -16,7 +27,7 @@ import uuid
 
 
 # ============================================================
-#   CONFIGURACIÓN
+#   CONFIGURATION & INITIALIZATION
 # ============================================================
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -36,11 +47,12 @@ app.config["DRAFTS_FOLDER"] = DRAFTS_DIR
 
 
 # ============================================================
-#   HOME: PANEL DE CONTROL
+#   SECTION 1: DASHBOARD
 # ============================================================
 
 @app.route("/", methods=["GET"])
 def index():
+    """Renders the main control panel for all automation tools."""
     html = """
     <!doctype html>
     <html lang="es">
@@ -285,11 +297,17 @@ def index():
 
 
 # ============================================================
-#   FASE 1: GENERAR HTML
+#   SECTION 2: VISUAL EDITOR & NEWSLETTER GENERATION
 # ============================================================
 
 @app.route("/generate", methods=["POST"])
 def generate_newsletter():
+    """
+    Handles CSV upload and initializes the visual editor.
+    1. Saves the uploaded CSV.
+    2. Parses and prepares data.
+    3. Renders initial HTML and serves the visual editor.
+    """
     uploaded_file = request.files["csv_file"]
     card_mode = request.form.get("card_mode", "urbano")
     newsletter_title = request.form.get("newsletter_title", "").strip()
@@ -297,7 +315,6 @@ def generate_newsletter():
     csv_path = os.path.join(app.config["UPLOAD_FOLDER"], "input.csv")
     uploaded_file.save(csv_path)
 
-    # --- PARSE CSV ---
     newsletter_data = csv_to_newsletter_dict(csv_path)
     newsletter_data["card_mode"] = card_mode
     newsletter_data["title"] = newsletter_title
@@ -309,7 +326,6 @@ def generate_newsletter():
             break
     newsletter_data["conditions"] = conditions_text
 
-    # --- GENERAR HTML BASE ---
     html_raw = render_newsletter(newsletter_data)
     html_output = html_raw 
 
@@ -322,6 +338,7 @@ def generate_newsletter():
 
 @app.route("/archive_visual", methods=["POST"])
 def archive_visual():
+    """Saves the current state of the visual editor to the persistent archive."""
     data = request.get_json()
     if not data or "html" not in data or "name" not in data:
         return jsonify({"error": "Faltan datos"}), 400
@@ -341,6 +358,7 @@ def archive_visual():
 
 @app.route("/visual_archive", methods=["GET"])
 def visual_archive_list():
+    """Lists all successfully archived newsletters from the visual editor."""
     items = []
     if os.path.exists(VISUAL_ARCHIVES_DIR):
         files = glob.glob(os.path.join(VISUAL_ARCHIVES_DIR, "*.html"))
@@ -359,6 +377,7 @@ def visual_archive_list():
 
 @app.route("/load_visual_archive/<filename>")
 def load_visual_archive(filename):
+    """Loads a previously archived newsletter back into the visual editor."""
     filepath = os.path.join(VISUAL_ARCHIVES_DIR, filename)
     if not os.path.exists(filepath):
         return "Archivo no encontrado", 404
@@ -366,25 +385,15 @@ def load_visual_archive(filename):
     with open(filepath, "r", encoding="utf-8") as f:
         html_content = f.read()
         
-    # Usamos la misma lógica de renderizado que generate_newsletter pero inyectando el HTML guardado
-    # Primero guardamos en preview.html temporal para que el iframe lo cargue
     preview_path = os.path.join(app.config["UPLOAD_FOLDER"], "preview.html")
     with open(preview_path, "w", encoding="utf-8") as f:
         f.write(html_content)
         
-    # Generamos la respuesta del editor
-    from flask import render_template_string
-    # Reutilizamos la lógica de result_html de generate_newsletter 
-    # (En una refactorización esto debería ser una función aparte, pero mantendremos la consistencia por ahora)
-    # NOTA: Como result_html es muy largo, lo ideal sería moverlo a un template .html, pero seguiremos el patrón actual.
-    
-    # Para evitar duplicar 300 líneas de código, vamos a hacer un pequeño hack:
-    # Llamamos internamente a la lógica de generate_newsletter pero saltándonos el renderizado inicial
     return redirect(url_for('generate_editor_from_preview'))
 
 @app.route("/editor_from_preview")
 def generate_editor_from_preview():
-    # Esta ruta simplemente renderiza el editor asumiendo que uploads/preview.html ya tiene lo que queremos
+    """Auxiliary route to load the visual editor from the current preview file."""
     preview_path = os.path.join(app.config["UPLOAD_FOLDER"], "preview.html")
     if not os.path.exists(preview_path):
         return redirect(url_for('index'))
@@ -392,16 +401,14 @@ def generate_editor_from_preview():
     with open(preview_path, "r", encoding="utf-8") as f:
         html_output = f.read()
         
-    # Aquí iría el mismo result_html que en generate_newsletter. 
-    # Como es idéntico, vamos a mover el result_html a una variable global o función pronto si sigue creciendo.
-    # Por ahora, me aseguro de que el usuario pueda editar.
-    
-    # BUSCAMOS EL result_html en webapp.py para copiarlo exactamente
     return _render_visual_editor(html_output)
 
 def _render_visual_editor(html_output):
-    # Función auxiliar para no duplicar el código del editor
-    # Extraída de generate_newsletter
+    """
+    Renders the Visual Editor UI.
+    Contains the editor interface (preview iframe & code textarea) and 
+    the JavaScript logic for real-time editing, row alignment, and archival.
+    """
     result_html = f"""
     <!doctype html>
     <html lang="es">
@@ -530,9 +537,7 @@ def _render_visual_editor(html_output):
                 try {{
                     const doc = frame.contentDocument || frame.contentWindow.document;
                     
-                    // Extraer nombre del <title> de la newsletter
                     let name = doc.title || "Newsletter_Sin_Nombre";
-                    // Limpieza básica de caracteres no permitidos en archivos
                     name = name.trim().replace(/[/\\\\?%*:|"<>]/g, '-');
                     if (!name) name = "Newsletter_Borrador";
 
@@ -639,7 +644,7 @@ def _render_visual_editor(html_output):
                     codeArea.value = "<!DOCTYPE html>\\n" + clone.outerHTML;
                 }}
 
-                doc.querySelectorAll('p, td, span, strong, h1, h2, h3, a, b, i, font').forEach(el => {{
+                doc.querySelectorAll('p, td, span, strong, h1, h2, h3, a, b, i, font, s, div, h4').forEach(el => {{
                     if (el.children.length === 0 || (el.tagName === 'A' && el.innerText.trim() !== "")) {{
                         el.contentEditable = "true";
                     }}
@@ -691,6 +696,7 @@ def _render_visual_editor(html_output):
 
 @app.route("/delete_visual/<filename>")
 def delete_visual(filename):
+    """Deletes a newsletter from the visual editor archive."""
     filepath = os.path.join(VISUAL_ARCHIVES_DIR, filename)
     if os.path.exists(filepath):
         os.remove(filepath)
@@ -698,14 +704,14 @@ def delete_visual(filename):
 
 
 # ============================================================
-#   FASE 2: SCRAPER Y KANBAN
+#   SECTION 3: SCRAPER SYSTEM & KANBAN
 # ============================================================
 
 @app.route("/scraper", methods=["GET"])
 def scraper_index():
+    """Renders the scraper dashboard with Pending and Ready drafts."""
     drafts_pending = []
     drafts_ready = []
-    # drafts_archived ya no se carga aquí
     
     if os.path.exists(DRAFTS_DIR):
         files = glob.glob(os.path.join(DRAFTS_DIR, "*.json"))
@@ -730,9 +736,9 @@ def scraper_index():
                            drafts_pending=drafts_pending, 
                            drafts_ready=drafts_ready)
 
-# --- NUEVA RUTA: ARCHIVO ---
 @app.route("/scraper/archive", methods=["GET"])
 def scraper_archive():
+    """Lists all archived scraper drafts."""
     drafts_archived = []
     
     if os.path.exists(DRAFTS_DIR):
@@ -758,6 +764,10 @@ def scraper_archive():
 
 @app.route("/scraper/review", methods=["POST"])
 def scraper_review():
+    """
+    Initializes a new draft by scraping a list of URLs.
+    Returns the review page with editable fields for each scraped product.
+    """
     raw_urls = request.form.get("urls", "").strip()
     url_list = [u.strip() for u in raw_urls.split('\n') if u.strip()]
     
@@ -794,6 +804,10 @@ def scraper_review():
 
 @app.route("/update_prices", methods=["POST"])
 def update_prices():
+    """
+    Refreshes prices and ratings for all products in a draft.
+    Triggers a re-scrape for each URL to ensure data is up to date.
+    """
     try:
         total_items = int(request.form.get("total_items", 0))
     except:
@@ -860,6 +874,7 @@ def update_prices():
 
 @app.route("/save_draft", methods=["POST"])
 def save_draft():
+    """Saves the current state of a scraper draft to a JSON file."""
     try:
         total_items = int(request.form.get("total_items", 0))
     except:
@@ -920,9 +935,9 @@ def save_draft():
         
     return redirect(url_for('scraper_index'))
 
-# --- API DRAG & DROP ---
 @app.route("/api/update_status", methods=["POST"])
 def api_update_status():
+    """API Endpoint: Updates the status of a draft (Pending/Ready/Archived) for the Kanban board."""
     data = request.json
     filename = data.get("filename")
     new_status = data.get("status")
@@ -950,6 +965,7 @@ def api_update_status():
 
 @app.route("/load_draft/<filename>")
 def load_draft(filename):
+    """Loads a scraper draft into the review page."""
     filepath = os.path.join(DRAFTS_DIR, filename)
     if os.path.exists(filepath):
         with open(filepath, "r", encoding="utf-8") as f:
@@ -965,18 +981,19 @@ def load_draft(filename):
 
 @app.route("/delete_draft/<filename>")
 def delete_draft(filename):
+    """Deletes a scraper draft file."""
     filepath = os.path.join(DRAFTS_DIR, filename)
     if os.path.exists(filepath):
         try: os.remove(filepath)
         except: pass
     
-    # Redirigir según desde dónde se llame
     referer = request.headers.get("Referer", "")
     if "archive" in referer:
         return redirect(url_for('scraper_archive'))
     return redirect(url_for('scraper_index'))
 
 def force_spanish_format(val):
+    """Utility: Formats numbers to use Spanish conventions (dot as thousand separator, comma as decimal)."""
     if not val: return ""
     val = str(val).replace("€", "").strip()
     if "," in val and "." not in val: return val
@@ -989,6 +1006,10 @@ def force_spanish_format(val):
         return val
 
 def inject_tracking(url, campaign_name, date_str):
+    """
+    Utility: Injects Atrápalo-specific 'atr_trk' parameters into product URLs.
+    Uses IDs for activities and dates for hotels.
+    """
     if not url: return ""
     base_url = url.split("?")[0]
     
@@ -1013,6 +1034,10 @@ def inject_tracking(url, campaign_name, date_str):
 
 @app.route("/scraper/download", methods=["POST"])
 def scraper_download():
+    """
+    Generates a CSV download for the current draft.
+    Applies tracking to URLs and formats prices for legacy CSV imports.
+    """
     try:
         total_items = int(request.form.get("total_items", 0))
     except:
@@ -1078,22 +1103,22 @@ def scraper_download():
     output = make_response(si.getvalue())
     output.data = si.getvalue().encode('utf-8-sig')
     output.headers["Content-Disposition"] = "attachment; filename=input_scraped.csv"
-    # AQUÍ ESTABA EL ERROR, CORREGIDO:
-    output.headers["Content-type"] = "text/csv; charset=utf-8-sig"
     output.headers["Content-type"] = "text/csv; charset=utf-8-sig"
     return output
 
 
 # ============================================================
-#   FASE 3: MARKETING TOOLS
+#   SECTION 4: MARKETING TOOLS
 # ============================================================
 
 @app.route("/marketing", methods=["GET"])
 def marketing_index():
+    """Renders the sub-menu for Marketing Tools (Tracking and Resizing)."""
     return render_template("marketing_index.html")
 
 @app.route("/marketing/tracking", methods=["POST"])
 def marketing_tracking():
+    """Generates tracked URLs for various social and paid channels."""
     channel = request.form.get("channel")
     urls_raw = request.form.get("urls", "").strip()
     campaign = request.form.get("campaign", "").strip()
@@ -1121,6 +1146,7 @@ def marketing_tracking():
 
 @app.route("/marketing/resize", methods=["POST"])
 def marketing_resize():
+    """Generates CDN-resized image URLs using Atrápalo's image service."""
     urls_raw = request.form.get("urls", "").strip()
     width = request.form.get("width", "")
     quality = request.form.get("quality", "75")
@@ -1140,6 +1166,7 @@ def marketing_resize():
 
 @app.route("/uploads/<path:filename>")
 def uploaded_files(filename):
+    """Serves files from the uploads directory (e.g., newsletter static previews)."""
     return send_file(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
 import webbrowser

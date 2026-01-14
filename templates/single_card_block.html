@@ -29,6 +29,9 @@
         <tr>
           <td valign="top" style="word-break:break-word">
 
+            <!-- ====================================================== -->
+            <!-- SECTION: MUTABLE TOP CONTAINER (Logic for Aligment) -->
+            <!-- ====================================================== -->
             <!-- Altura distinta según modo de card -->
             {% if newsletter.card_mode == "vacacional" %}
             <div data-card-container="true" data-container-type="top" data-floor="160"
@@ -184,9 +187,10 @@
                   {% if item.price_old and item.discount_percentage %}
                   <tr>
                     <td style="padding:0 16px;">
-                      <p style="margin:0; font-size:14px; color:#666;">desde <s>{{ item.price_old }} €</s></p>
+                      <p style="margin:0; font-size:14px; color:#666;"><span>desde</span> <s>{{ item.price_old }} €</s>
+                      </p>
                       <p style="margin:0; font-size:20px; font-weight:bold;">
-                        {{ item.price }} €
+                        <span>{{ item.price }} €</span>
                         <span style="
                         float:right;
                         color:#e6002c;
@@ -205,9 +209,9 @@
                   {% elif item.discount_percentage %}
                   <tr>
                     <td style="padding:0 16px;">
-                      <p style="margin:0; font-size:14px; color:#666;">desde</p>
+                      <p style="margin:0; font-size:14px; color:#666;"><span>desde</span></p>
                       <p style="margin:0; font-size:20px; font-weight:bold;">
-                        {{ item.price }} €
+                        <span>{{ item.price }} €</span>
                         <span style="
                         float:right;
                         color:#e6002c;
@@ -226,8 +230,8 @@
                   {% else %}
                   <tr>
                     <td style="padding:0 16px;">
-                      <p style="margin:0; font-size:14px; color:#666;">desde</p>
-                      <p style="margin:0; font-size:20px; font-weight:bold;">{{ item.price }} €</p>
+                      <p style="margin:0; font-size:14px; color:#666;"><span>desde</span></p>
+                      <p style="margin:0; font-size:20px; font-weight:bold;"><span>{{ item.price }} €</span></p>
                     </td>
                   </tr>
                   {% endif %}

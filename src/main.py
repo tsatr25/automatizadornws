@@ -1,21 +1,21 @@
+"""
+CLI Entry Point
+Allows generating a newsletter directly from the command line using a local CSV file.
+Useful for testing the rendering engine without launching the web server.
+"""
+
 from pathlib import Path
 from .renderer import render_newsletter_from_csv
 
 
 def main():
-    # Carpeta base del proyecto
+    """Main execution function for CLI-based rendering."""
     base_dir = Path(__file__).resolve().parent.parent
-
-    # Aquí pones el nombre del CSV que quieras procesar
     csv_path = base_dir / "data" / "NL OU 2025 - TEST JSON2 (9).csv"
-
-    # Archivo HTML que se va a generar
     output_path = base_dir / "output" / "newsletter.html"
-
-    # Generar HTML
     render_newsletter_from_csv(str(csv_path), str(output_path))
 
-    print("✅ Newsletter generada en:")
+    print("Newsletter generada en:")
     print(output_path)
 
 

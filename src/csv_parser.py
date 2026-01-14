@@ -1,12 +1,19 @@
+"""
+CSV Parser Module
+Handles reading and formatting data from Atrápalo's newsletter CSV files.
+Includes logic for price formatting, description shortening, and card parsing.
+"""
+
 import csv
 
+# Color mapping for card badges based on tags
 BADGE_COLORS = {
     "Próximo estreno": "#5631B7",
     "Oferta exclusiva": "#FCC905",
     "Oferta exclusiva Flash": "#FCC905",
     "Novedad": "#027D49",
     "Fecha única": "#96298D",
-    # TAGS HOTELES (Fondo Verde Claro)
+    # TAGS HOTELES (Light Green background mapping)
     "Spa": "#DAF7E6",
     "A pie de pistas": "#DAF7E6",
     "Desayuno": "#DAF7E6",
@@ -15,10 +22,16 @@ BADGE_COLORS = {
     "Todo Incluido": "#DAF7E6",
 }
 
+# Standardized maximum character count for card descriptions
 MAX_DESCRIPTION_CHARS = 150
 
 
 def format_price(value):
+    """
+    Standardizes price formatting for the newsletter.
+    - 1500.0 -> 1500
+    - 24.95 -> 24,95
+    """
     if value is None:
         return None
     try:
@@ -32,7 +45,6 @@ def format_price(value):
     return f"{v:.2f}".replace(".", ",")
 
 
-# ⭐⭐⭐ NUEVO: FORMATEADOR DE RATING ⭐⭐⭐
 def format_rating(value):
     """
     - 10.0 → 10
@@ -52,6 +64,9 @@ def format_rating(value):
 
 
 def shorten(text: str, max_chars: int = MAX_DESCRIPTION_CHARS) -> str:
+    """
+    Smartly truncates text to a maximum character count without cutting words.
+    """
     if not text:
         return ""
     text = text.strip()
@@ -64,14 +79,15 @@ def shorten(text: str, max_chars: int = MAX_DESCRIPTION_CHARS) -> str:
 
 
 def parse_header_block(rows):
+    """
+    Extracts global newsletter configuration (Header, Preheader, Footer) from raw CSV rows.
+    """
     header = {}
     footer = {}
 
     key_map = {
         "HEADER:": ("header", "image_url"),
         "LINK HEADER:": ("header", "link_url"),
-
-        # ⭐ NUEVO → PREHEADER desde CSV
         "PREHEADER:": ("header", "preheader"),
         "\ufeffPREHEADER:": ("header", "preheader"),
 
@@ -105,6 +121,10 @@ def parse_header_block(rows):
 
 
 def parse_cards(header_row, data_rows):
+    """
+    Parses individual product cards from CSV data.
+    Handles field mapping, price conversion, rating extraction, and badge assignment.
+    """
     idx = {name: i for i, name in enumerate(header_row)}
 
     def get(row, name):
@@ -159,7 +179,7 @@ def parse_cards(header_row, data_rows):
 
         conditions_raw = get(row, "CONDICIONES")
 
-        # ---------------- RATING ----------------
+        # RATING
         rating_raw = get(row, "RATING")
         rating_value = None
         rating_text = None
@@ -210,7 +230,7 @@ def parse_cards(header_row, data_rows):
             "badge_text": None,
             "badge_color": None,
 
-            # ⭐ RATING REFORMATEADO
+            # RATING
             "rating_value": rating_value,
             "rating_value_formatted": format_rating(rating_value) if rating_value is not None else None,
             "rating_text": rating_text,
@@ -232,6 +252,10 @@ def parse_cards(header_row, data_rows):
 
 
 def csv_to_newsletter_dict(csv_path: str) -> dict:
+    """
+    Main entry point for CSV parsing.
+    Splits the CSV into Header and Card blocks and returns a structured dictionary.
+    """
     rows = []
     with open(csv_path, newline="", encoding="utf-8") as f:
         reader = csv.reader(f)

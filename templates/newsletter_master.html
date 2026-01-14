@@ -244,6 +244,7 @@
             <td>
               <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%">
 
+                <!-- CARD LOOP: Renders cards in batches of 2 for a symmetrical grid -->
                 {% for row in newsletter.cards|batch(2, fill_with=None) %}
                 {% set c1 = row[0] %}
                 {% set c2 = row[1] %}
@@ -489,6 +490,9 @@
           </tr>
           {% endif %}
 
+          <!-- =============================================== -->
+          <!-- SECTION: LEGAL FOOTER -->
+          <!-- =============================================== -->
           <!-- FOOTER LEGAL -->
           <tr>
             <td>

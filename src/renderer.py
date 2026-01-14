@@ -1,3 +1,9 @@
+"""
+Renderer Module
+Handles HTML generation for newsletters using Jinja2 templates.
+Includes utility functions for UTM tracking injection and campaign name normalization.
+"""
+
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from .csv_parser import csv_to_newsletter_dict
@@ -7,9 +13,7 @@ from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 import unicodedata
 
 
-# ============================================================
-#   CONFIG JINJA
-# ============================================================
+# Configuration
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = BASE_DIR / "templates"
@@ -27,17 +31,14 @@ def get_jinja_env() -> Environment:
     return env
 
 
-# ============================================================
-#   FUNCIÓN ORIGINAL → Render desde CSV
-# ============================================================
+# CSV Rendering
 
 def render_newsletter_from_csv(csv_path: str, output_path: str | None = None) -> str:
     """
-    - Lee el CSV
-    - Genera el diccionario newsletter
-    - Renderiza la plantilla HTML con los datos
-    - Devuelve el HTML como string
-    - Si se pasa output_path, lo guarda como archivo
+    Renders a newsletter directly from a CSV file.
+    1. Parses CSV to dictionary.
+    2. Renders Jinja2 template.
+    3. Saves output if path provided.
     """
     data = csv_to_newsletter_dict(csv_path)
 
@@ -54,30 +55,24 @@ def render_newsletter_from_csv(csv_path: str, output_path: str | None = None) ->
     return html
 
 
-# ============================================================
-#   FUNCIÓN → Render desde DICCIONARIO
-# ============================================================
+# Dictionary Rendering
 
 def render_newsletter(newsletter_data: dict) -> str:
     """
-    Renderiza el newsletter recibiendo un diccionario ya preparado,
-    sin necesidad de pasar por la capa CSV.
+    Renders the newsletter using a pre-prepared data dictionary.
+    Used by the visual editor and direct JSON flows.
     """
     env = get_jinja_env()
     template = env.get_template("newsletter_master.html")
     return template.render(newsletter=newsletter_data)
 
 
-# ============================================================
-#   NORMALIZADOR DE CAMPAÑA (UTM)
-# ============================================================
+# Normalization
 
 def normalize_campaign_name(name: str) -> str:
     """
-    Convierte el nombre del newsletter en una campaña UTM limpia:
-    - lower case
-    - remplaza espacios por guiones
-    - quita acentos y caracteres raros
+    Cleans a campaign name for UTM usage.
+    Converts to lowercase, removes accents, and replaces spaces with dashes.
     """
     if not name:
         return "newsletter"
@@ -92,15 +87,12 @@ def normalize_campaign_name(name: str) -> str:
     return name
 
 
-# ============================================================
-#   INSERTA UTMs SIN ROMPER EL ENLACE ORIGINAL
-# ============================================================
+# UTM Management
 
 def add_utm_params(url: str, campaign: str, content: str) -> str:
     """
-    Añade UTMs sin borrar parámetros originales como atr_trk.
-    - preserva query existente
-    - reemplaza utms preexistentes
+    Appends UTM parameters to a URL while preserving existing query parameters.
+    Handles 'atr_trk' preservation and prevents duplicate UTMs.
     """
     parsed = urlparse(url)
     query = parse_qs(parsed.query)
@@ -125,13 +117,12 @@ def add_utm_params(url: str, campaign: str, content: str) -> str:
     return clean_url
 
 
-# ============================================================
-#   APLICA TRACKING UTM A TODO EL HTML
-# ============================================================
+# HTML Tracking
 
 def apply_utm_tracking(html: str, campaign_name: str) -> str:
     """
-    Reemplaza todos los href="..." añadiendo UTMs según su tipo.
+    Parses the entire HTML output and injects UTM tracking into all links.
+    Intelligently identifies the 'utm_content' based on the link's context in the HTML.
     """
 
     campaign = normalize_campaign_name(campaign_name)
@@ -171,7 +162,7 @@ def apply_utm_tracking(html: str, campaign_name: str) -> str:
         else:
             content = "link"
 
-        # añadir utms
+        # añdir utms
         tracked = add_utm_params(url, campaign, content)
         return f'href="{tracked}"'
 

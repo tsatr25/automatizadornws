@@ -1,11 +1,20 @@
+"""
+Scraper Module
+Responsible for extracting product data (Hotels and Activities) from Atrápalo URLs.
+Uses BeautifulSoup for parsing and handles different layout patterns.
+"""
+
 import requests
 from bs4 import BeautifulSoup
 import json
 import re
 
 
-
 def get_atrapalo_data(url):
+    """
+    Main entry point for scraping a URL.
+    Identifies the product type (Hotel vs Activity) and calls the appropriate parser.
+    """
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
@@ -17,7 +26,6 @@ def get_atrapalo_data(url):
             
         soup = BeautifulSoup(response.content, 'html.parser')
         
-        # DETECTOR INTELIGENTE
         if "/hoteles/" in url:
             return parse_hotel(soup, url)
         else:
@@ -28,7 +36,10 @@ def get_atrapalo_data(url):
         return None
 
 def parse_activity(soup, url):
-    """Lógica estándar para Ocio Urbano"""
+    """
+    Parses 'Ocio Urbano' (Activities) pages.
+    Extracts title, location (metadata), images, base price, and ratings.
+    """
     data = {
         'url': url,
         'title': '', 'description': '', 'image': '',
@@ -84,7 +95,10 @@ def parse_activity(soup, url):
     return data
 
 def parse_hotel(soup, url):
-    """Lógica específica para HOTELES"""
+    """
+    Parses Hotel pages with specific logic for stars, city extraction, and tags.
+    Handles JSON-LD script parsing for robust price extraction.
+    """
     data = {
         'url': url,
         'title': '', 
@@ -101,13 +115,13 @@ def parse_hotel(soup, url):
         'separator': ''
     }
 
-    # 1. TÍTULO
+    # TITLE
     try:
         h1 = soup.select_one('h1.detail-header__title, h1')
         if h1: data['title'] = h1.get_text(strip=True)
     except: pass
 
-    # 2. CIUDAD (Solo para la descripción)
+    # CITY
     city = "tu destino"
     try:
         addr = soup.select_one('.detail-header__address, .address')
@@ -117,7 +131,7 @@ def parse_hotel(soup, url):
                 city = full_addr.split(",")[-1].strip()
     except: pass
 
-    # 3. ESTRELLAS (Para Meta 1)
+    # ESTRELLAS
     stars = "3"
     try:
         star_icons = soup.select('.icon-star, .stars i, .category-stars i')
@@ -132,15 +146,15 @@ def parse_hotel(soup, url):
     
     data['metadata_1'] = f"Hotel {stars}* en hab. doble"
 
-    # 4. IMAGEN
+    # IMAGE
     try:
         og_img = soup.find("meta", property="og:image")
         if og_img: data['image'] = og_img["content"]
     except: pass
 
-    # 5. PRECIO (Buscamos en JSON-LD y Metas)
+    # PRICE
     try:
-        # Intento 1: JSON-LD
+        # JSON-LD
         scripts = soup.find_all('script', type='application/ld+json')
         found_price = False
         for s in scripts:
@@ -151,13 +165,13 @@ def parse_hotel(soup, url):
                     found_price = True
                     break
         
-        # Intento 2: Meta Price
+        # Meta Price
         if not found_price:
             meta_price = soup.find("meta", property="product:price:amount")
             if meta_price: data['price'] = meta_price["content"]
     except: pass
 
-    # 6. DESCRIPCIÓN (Ciudad + Texto)
+    # DESCRIPTION
     try:
         desc = soup.find("meta", attrs={"name": "description"})
         raw_text = ""
@@ -169,7 +183,6 @@ def parse_hotel(soup, url):
         
         if raw_text:
             raw_text = raw_text.replace("Reserva ahora en", "").replace("al mejor precio", "")
-            # Forzamos que empiece por la ciudad
             if not raw_text.lower().startswith(f"en {city.lower()}"):
                 final_desc = f"En {city}, {raw_text}"
             else:
@@ -181,14 +194,13 @@ def parse_hotel(soup, url):
             data['description'] = final_desc
     except: pass
 
-    # 7. RATING
+    # RATING
     try:
         score = soup.select_one('.badge-rating__score, .rating-score')
         if score: data['rating'] = score.get_text(strip=True)
     except: pass
 
-    # 8. DETECCIÓN DE TAGS (Desayuno, Spa, Pistas...)
-    # Buscamos en todo el texto del cuerpo para asegurar
+    # TAGS
     try:
         body_text = soup.get_text().lower()
         found_tags = []
@@ -202,8 +214,7 @@ def parse_hotel(soup, url):
         if not found_tags and "piscina" in body_text: found_tags.append("Piscina")
         
         if found_tags:
-            # Nos quedamos con el más relevante o unimos los dos primeros
-            data['tag'] = " / ".join(found_tags[:1]) # Ej: "Spa" o "Desayuno"
+            data['tag'] = " / ".join(found_tags[:1])
     except: pass
 
     return data
