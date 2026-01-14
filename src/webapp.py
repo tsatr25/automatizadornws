@@ -12,6 +12,7 @@ from src.csv_parser import csv_to_newsletter_dict
 from src.renderer import render_newsletter
 from src.scraper import get_atrapalo_data
 from src.marketing import TrackingGenerator, ImageResizer
+import uuid
 
 
 # ============================================================
@@ -21,9 +22,13 @@ from src.marketing import TrackingGenerator, ImageResizer
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 UPLOADS_DIR = os.path.join(BASE_DIR, "uploads")
 DRAFTS_DIR = os.path.join(BASE_DIR, "drafts")
+PREVIEWS_DIR = os.path.join(BASE_DIR, "previews")
+VISUAL_ARCHIVES_DIR = os.path.join(BASE_DIR, "visual_archives")
 
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 os.makedirs(DRAFTS_DIR, exist_ok=True)
+os.makedirs(PREVIEWS_DIR, exist_ok=True)
+os.makedirs(VISUAL_ARCHIVES_DIR, exist_ok=True)
 
 app = Flask(__name__, template_folder=os.path.join(BASE_DIR, "templates"))
 app.config["UPLOAD_FOLDER"] = UPLOADS_DIR
@@ -265,6 +270,9 @@ def index():
 
                         <button type="submit" class="btn btn-outline">Generar HTML</button>
                     </form>
+                    <div style="text-align: right; margin-top: 10px;">
+                        <a href="/visual_archive" style="font-size: 0.85rem; color: #6B7280; text-decoration: none;">Ver Archivo de Newsletters →</a>
+                    </div>
                 </div>
             </div>
 
@@ -309,47 +317,384 @@ def generate_newsletter():
     with open(preview_path, "w", encoding="utf-8") as f:
         f.write(html_output)
 
+    return _render_visual_editor(html_output)
+
+
+@app.route("/archive_visual", methods=["POST"])
+def archive_visual():
+    data = request.get_json()
+    if not data or "html" not in data or "name" not in data:
+        return jsonify({"error": "Faltan datos"}), 400
+    
+    name = data["name"].strip()
+    if not name:
+        return jsonify({"error": "Nombre vacío"}), 400
+        
+    filename = f"{name}.html"
+    filepath = os.path.join(VISUAL_ARCHIVES_DIR, filename)
+    
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.write(data["html"])
+        
+    return jsonify({"success": True})
+
+
+@app.route("/visual_archive", methods=["GET"])
+def visual_archive_list():
+    items = []
+    if os.path.exists(VISUAL_ARCHIVES_DIR):
+        files = glob.glob(os.path.join(VISUAL_ARCHIVES_DIR, "*.html"))
+        files.sort(key=os.path.getmtime, reverse=True)
+        for f in files:
+            filename = os.path.basename(f)
+            mtime = os.path.getmtime(f)
+            updated = time.strftime('%d/%m/%Y %H:%M', time.localtime(mtime))
+            items.append({
+                "filename": filename,
+                "updated": updated
+            })
+            
+    return render_template("visual_archive.html", items=items)
+
+
+@app.route("/load_visual_archive/<filename>")
+def load_visual_archive(filename):
+    filepath = os.path.join(VISUAL_ARCHIVES_DIR, filename)
+    if not os.path.exists(filepath):
+        return "Archivo no encontrado", 404
+        
+    with open(filepath, "r", encoding="utf-8") as f:
+        html_content = f.read()
+        
+    # Usamos la misma lógica de renderizado que generate_newsletter pero inyectando el HTML guardado
+    # Primero guardamos en preview.html temporal para que el iframe lo cargue
+    preview_path = os.path.join(app.config["UPLOAD_FOLDER"], "preview.html")
+    with open(preview_path, "w", encoding="utf-8") as f:
+        f.write(html_content)
+        
+    # Generamos la respuesta del editor
+    from flask import render_template_string
+    # Reutilizamos la lógica de result_html de generate_newsletter 
+    # (En una refactorización esto debería ser una función aparte, pero mantendremos la consistencia por ahora)
+    # NOTA: Como result_html es muy largo, lo ideal sería moverlo a un template .html, pero seguiremos el patrón actual.
+    
+    # Para evitar duplicar 300 líneas de código, vamos a hacer un pequeño hack:
+    # Llamamos internamente a la lógica de generate_newsletter pero saltándonos el renderizado inicial
+    return redirect(url_for('generate_editor_from_preview'))
+
+@app.route("/editor_from_preview")
+def generate_editor_from_preview():
+    # Esta ruta simplemente renderiza el editor asumiendo que uploads/preview.html ya tiene lo que queremos
+    preview_path = os.path.join(app.config["UPLOAD_FOLDER"], "preview.html")
+    if not os.path.exists(preview_path):
+        return redirect(url_for('index'))
+        
+    with open(preview_path, "r", encoding="utf-8") as f:
+        html_output = f.read()
+        
+    # Aquí iría el mismo result_html que en generate_newsletter. 
+    # Como es idéntico, vamos a mover el result_html a una variable global o función pronto si sigue creciendo.
+    # Por ahora, me aseguro de que el usuario pueda editar.
+    
+    # BUSCAMOS EL result_html en webapp.py para copiarlo exactamente
+    return _render_visual_editor(html_output)
+
+def _render_visual_editor(html_output):
+    # Función auxiliar para no duplicar el código del editor
+    # Extraída de generate_newsletter
     result_html = f"""
     <!doctype html>
     <html lang="es">
     <head>
         <meta charset="utf-8">
-        <title>Resultado</title>
+        <title>Editor Visual</title>
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
         <style>
-            body {{ font-family: 'Poppins', sans-serif; padding: 40px; background: #F3F4F6; color: #1F2937; }}
-            .container {{ max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; border: 1px solid #E5E7EB; }}
-            h2 {{ margin-top: 0; font-size: 1.2rem; margin-bottom: 20px; }}
-            textarea {{ width: 100%; height: 250px; padding: 15px; font-family: monospace; border: 1px solid #D1D5DB; border-radius: 6px; box-sizing: border-box; background: #F9FAFB; }}
+            body {{ font-family: 'Poppins', sans-serif; padding: 20px; background: #F3F4F6; color: #1F2937; margin: 0; }}
+            .layout {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: calc(100vh - 120px); }}
+            .panel {{ background: white; padding: 20px; border-radius: 8px; border: 1px solid #E5E7EB; display: flex; flex-direction: column; }}
+            h2 {{ margin-top: 0; font-size: 1.1rem; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; }}
+            textarea {{ width: 100%; flex-grow: 1; padding: 15px; font-family: monospace; border: 1px solid #D1D5DB; border-radius: 6px; box-sizing: border-box; background: #F9FAFB; resize: none; font-size: 12px; }}
             textarea:focus {{ outline: none; border-color: #FF002D; }}
-            .actions {{ margin-top: 20px; display: flex; gap: 10px; }}
-            .btn {{ padding: 10px 20px; background: #FF002D; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; text-decoration: none; }}
+            iframe {{ width: 100%; flex-grow: 1; border: 1px solid #D1D5DB; border-radius: 6px; background: white; }}
+            .actions {{ margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }}
+            .btn {{ padding: 8px 16px; background: #FF002D; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; text-decoration: none; font-size: 0.9rem; }}
             .btn:hover {{ background: #D60026; }}
             .btn-sec {{ background: white; border: 1px solid #D1D5DB; color: #374151; }}
             .btn-sec:hover {{ background: #F3F4F6; }}
+            .tip {{ font-size: 0.8rem; color: #6B7280; font-weight: 400; }}
         </style>
-        <script>
-            function copy() {{
-                document.getElementById("code").select();
-                document.execCommand("copy");
-                alert("Código copiado al portapapeles.");
-            }}
-        </script>
     </head>
     <body>
-        <div class="container">
-            <h2>Newsletter Generada</h2>
-            <textarea id="code">{html_output.replace("<", "&lt;")}</textarea>
+        <div style="max-width: 1400px; margin: 0 auto;">
             <div class="actions">
-                <button class="btn" onclick="copy()">Copiar Código</button>
-                <a href="/uploads/preview.html" target="_blank" class="btn btn-sec">Vista Previa</a>
-                <a href="/" class="btn btn-sec" style="margin-left: auto;">Volver al Panel</a>
+                <a href="/" class="btn btn-sec" style="background: #fee2e2; color: #991b1b; border-color: #fecaca;">← Cerrar sin guardar</a>
+                <h1 style="font-size: 1.3rem; margin: 0; margin-left: 20px; margin-right: auto;">Editor Visual</h1>
+                
+                <div style="display: flex; gap: 10px;">
+                    <a href="/visual_archive" class="btn btn-sec">Ver Archivo</a>
+                    <button class="btn btn-sec" onclick="share()">Generar Enlace</button>
+                    <button class="btn" style="background: #dcfce7; color: #166534; border: 1px solid #bbf7d0;" onclick="saveToArchive()">Guardar y Salir</button>
+                </div>
+            </div>
+            
+            <div class="layout">
+                <div class="panel">
+                    <h2>
+                        Previsualización
+                        <span class="tip">Haz clic en los textos para editarlos</span>
+                    </h2>
+                    <iframe id="preview-frame" src="/uploads/preview.html"></iframe>
+                </div>
+                
+                <div class="panel">
+                    <h2>
+                        Código HTML
+                        <button class="btn btn-sec" style="padding: 4px 12px; font-size: 0.8rem;" onclick="copy()">Copiar Código</button>
+                    </h2>
+                    <textarea id="code" readonly>{html_output.replace("<", "&lt;")}</textarea>
+                </div>
             </div>
         </div>
+
+        <script>
+            const frame = document.getElementById('preview-frame');
+            const codeArea = document.getElementById('code');
+
+            function copy() {{
+                codeArea.select();
+                document.execCommand("copy");
+                const btn = event.target;
+                const originalText = btn.innerText;
+                btn.innerText = "¡Copiado!";
+                setTimeout(() => btn.innerText = originalText, 2000);
+            }}
+
+            async function share() {{
+                const btn = event.target;
+                const originalText = btn.innerText;
+                btn.innerText = "Generando...";
+                btn.disabled = true;
+
+                try {{
+                    const doc = frame.contentDocument || frame.contentWindow.document;
+                    const clone = doc.documentElement.cloneNode(true);
+                    const injectedStyle = clone.querySelector('#editor-style');
+                    if (injectedStyle) injectedStyle.remove();
+
+                    clone.querySelectorAll('[contenteditable], [data-editable-spacer], [data-card-container], [data-container-type], [data-base-height], [data-card-row], [data-spacer-id], [data-card-main], [data-floor]').forEach(el => {{
+                        el.removeAttribute('contenteditable');
+                        el.removeAttribute('data-editable-spacer');
+                        el.removeAttribute('data-card-container');
+                        el.removeAttribute('data-container-type');
+                        el.removeAttribute('data-base-height');
+                        el.removeAttribute('data-card-row');
+                        el.removeAttribute('data-spacer-id');
+                        el.removeAttribute('data-card-main');
+                        el.removeAttribute('data-floor');
+                        if (el.style.outline) el.style.outline = "";
+                        if (el.style.cursor) el.style.cursor = "";
+                        if (el.style.minHeight) el.style.minHeight = "";
+                        if (el.getAttribute('style') === "") el.removeAttribute('style');
+                    }});
+
+                    const finalHtml = "<!DOCTYPE html>\\n" + clone.outerHTML;
+
+                    const response = await fetch('/share_preview', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{ html: finalHtml }})
+                    }});
+
+                    const result = await response.json();
+                    if (result.url) {{
+                        prompt("Enlace de vista previa generado:", result.url);
+                    }} else {{
+                        alert("Error al generar el enlace");
+                    }}
+                }} catch (err) {{
+                    console.error(err);
+                    alert("Error de conexión");
+                }} finally {{
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }}
+            }}
+
+            async function saveToArchive() {{
+                const btn = event.target;
+                const originalText = btn.innerText;
+                btn.innerText = "Guardando...";
+                btn.disabled = true;
+
+                try {{
+                    const doc = frame.contentDocument || frame.contentWindow.document;
+                    
+                    // Extraer nombre del <title> de la newsletter
+                    let name = doc.title || "Newsletter_Sin_Nombre";
+                    // Limpieza básica de caracteres no permitidos en archivos
+                    name = name.trim().replace(/[/\\\\?%*:|"<>]/g, '-');
+                    if (!name) name = "Newsletter_Borrador";
+
+                    const clone = doc.documentElement.cloneNode(true);
+                    const injectedStyle = clone.querySelector('#editor-style');
+                    if (injectedStyle) injectedStyle.remove();
+                    
+                    const finalHtml = "<!DOCTYPE html>\\n" + clone.outerHTML;
+
+                    const response = await fetch('/archive_visual', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{ name: name, html: finalHtml }})
+                    }});
+
+                    const result = await response.json();
+                    if (result.success) {{
+                        alert("Guardado correctamente. Volviendo al panel...");
+                        window.location.href = '/';
+                    }} else {{
+                        alert("Error: " + result.error);
+                        btn.innerText = originalText;
+                        btn.disabled = false;
+                    }}
+                }} catch (err) {{
+                    console.error(err);
+                    alert("Error de conexión");
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }}
+            }}
+
+            frame.onload = function() {{
+                const doc = frame.contentDocument || frame.contentWindow.document;
+                const style = doc.createElement('style');
+                style.id = "editor-style";
+                style.textContent = `
+                    [contenteditable]:hover {{ outline: 1px dashed #ccc; cursor: text; }}
+                    [contenteditable]:focus {{ outline: 2px solid #ff002d; background: rgba(255,0,45,0.05); }}
+                    [data-editable-spacer] {{ position: relative; }}
+                    [data-editable-spacer]:hover {{ outline: 1px solid red; cursor: ns-resize; background: rgba(255,0,0,0.1); }}
+                `;
+                doc.head.appendChild(style);
+
+                function realignRow(rowEl) {{
+                    if (!rowEl) return;
+                    ['top', 'bottom'].forEach(type => {{
+                        const containers = Array.from(rowEl.querySelectorAll(`[data-container-type="${{type}}"]`));
+                        if (containers.length < 2) return;
+                        containers.forEach(c => {{
+                            c.style.height = "auto";
+                            const floor = c.getAttribute('data-floor');
+                            if (floor) {{ c.style.minHeight = floor + "px"; }}
+                            if (type === 'top') {{
+                                const filler = c.querySelector('[data-spacer-id="post-rating"]');
+                                if (filler) {{
+                                    const b = (filler.getAttribute('data-base-height') || 20) + "px";
+                                    filler.style.height = b;
+                                    filler.style.lineHeight = b;
+                                }}
+                            }}
+                        }});
+                        void rowEl.offsetHeight;
+                        let maxH = 0;
+                        containers.forEach(c => {{
+                            const h = c.getBoundingClientRect().height;
+                            if (h > maxH) maxH = h;
+                        }});
+                        containers.forEach(c => {{
+                            const h = c.getBoundingClientRect().height;
+                            const diff = maxH - h;
+                            if (diff > 0.5 && type === 'top') {{
+                                const filler = c.querySelector('[data-spacer-id="post-rating"]');
+                                if (filler) {{
+                                    const current = parseFloat(filler.style.height) || filler.offsetHeight || 0;
+                                    filler.style.height = (current + diff) + "px";
+                                    filler.style.lineHeight = (current + diff) + "px";
+                                }}
+                            }}
+                            c.style.height = maxH + "px";
+                        }});
+                    }});
+                }}
+
+                function sync() {{
+                    const clone = doc.documentElement.cloneNode(true);
+                    const injectedStyle = clone.querySelector('#editor-style');
+                    if (injectedStyle) injectedStyle.remove();
+                    clone.querySelectorAll('[contenteditable], [data-editable-spacer], [data-card-container], [data-container-type], [data-base-height], [data-card-row], [data-spacer-id], [data-card-main], [data-floor]').forEach(el => {{
+                        el.removeAttribute('contenteditable');
+                        el.removeAttribute('data-editable-spacer');
+                        el.removeAttribute('data-card-container');
+                        el.removeAttribute('data-container-type');
+                        el.removeAttribute('data-base-height');
+                        el.removeAttribute('data-card-row');
+                        el.removeAttribute('data-spacer-id');
+                        el.removeAttribute('data-card-main');
+                        el.removeAttribute('data-floor');
+                        if (el.style.outline) el.style.outline = "";
+                        if (el.style.cursor) el.style.cursor = "";
+                        if (el.style.minHeight) el.style.minHeight = "";
+                        if (el.getAttribute('style') === "") el.removeAttribute('style');
+                    }});
+                    codeArea.value = "<!DOCTYPE html>\\n" + clone.outerHTML;
+                }}
+
+                doc.querySelectorAll('p, td, span, strong, h1, h2, h3, a, b, i, font').forEach(el => {{
+                    if (el.children.length === 0 || (el.tagName === 'A' && el.innerText.trim() !== "")) {{
+                        el.contentEditable = "true";
+                    }}
+                }});
+
+                doc.querySelectorAll('[data-editable-spacer]').forEach(el => {{
+                    el.addEventListener('click', (e) => {{
+                        e.preventDefault();
+                        const oldH = el.offsetHeight;
+                        const inputH = prompt("Ajustar espacio (px):", oldH);
+                        if (inputH !== null && !isNaN(inputH)) {{
+                            const newH = parseInt(inputH);
+                            const row = el.closest('[data-card-row]');
+                            const spacerId = el.getAttribute('data-spacer-id');
+                            if (spacerId === "post-rating" && row) {{
+                                row.querySelectorAll(`[data-spacer-id="post-rating"]`).forEach(s => {{
+                                    s.style.height = newH + "px";
+                                    s.style.lineHeight = newH + "px";
+                                    s.setAttribute('data-base-height', newH);
+                                }});
+                                realignRow(row);
+                            }} else {{
+                                el.style.height = newH + "px";
+                                el.style.lineHeight = newH + "px";
+                                if (el.hasAttribute('data-base-height')) el.setAttribute('data-base-height', newH);
+                            }}
+                            sync();
+                        }}
+                    }});
+                }});
+
+                doc.addEventListener('input', () => {{
+                    doc.querySelectorAll('[data-card-row]').forEach(realignRow);
+                    sync();
+                }});
+
+                setTimeout(() => {{
+                    doc.querySelectorAll('[data-card-row]').forEach(realignRow);
+                    sync();
+                }}, 400);
+            }};
+        </script>
     </body>
     </html>
     """
+    from flask import render_template_string
     return render_template_string(result_html)
+
+
+@app.route("/delete_visual/<filename>")
+def delete_visual(filename):
+    filepath = os.path.join(VISUAL_ARCHIVES_DIR, filename)
+    if os.path.exists(filepath):
+        os.remove(filepath)
+    return redirect(url_for('visual_archive_list'))
 
 
 # ============================================================

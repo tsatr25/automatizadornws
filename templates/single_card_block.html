@@ -2,23 +2,25 @@
 
 <!-- CARD BASE -->
 <table class="fullWithMobile" border="0" cellpadding="0" cellspacing="0" role="presentation" width="288"
-       style="border-collapse:collapse; background:#FFFFFF; border-radius:8px; font-family:Arial, sans-serif;">
+  data-card-main="true"
+  style="border-collapse:collapse; background:#FFFFFF; border-radius:8px; font-family:Arial, sans-serif;">
 
   <!-- IMAGEN CLICABLE -->
   <tr>
     <td class="fullWithMobile" style="padding:0;">
       <a href="{{ item.url | safe }}" target="_blank"
-         style="display:block; border:0; text-decoration:none; outline:none;">
-        <img 
-          src="{{ item.image }}" 
-          alt="{{ item.title }}"
+        style="display:block; border:0; text-decoration:none; outline:none;">
+        <img src="{{ item.image }}" alt="{{ item.title }}"
           style="display:block;width:100%;border-radius:8px 8px 0 0;border:0;">
       </a>
     </td>
   </tr>
 
   <!-- Espaciador superior -->
-  <tr><td style="height:16px; line-height:16px; font-size:0;">&#8202;</td></tr>
+  <tr>
+    <td style="height:16px; line-height:16px; font-size:0;">
+      &#8202;</td>
+  </tr>
 
   <!-- CONTENIDO SUPERIOR -->
   <tr>
@@ -29,18 +31,20 @@
 
             <!-- Altura distinta según modo de card -->
             {% if newsletter.card_mode == "vacacional" %}
-            <div style="box-sizing:border-box;height:160px;">
-            {% else %}
-            <div style="box-sizing:border-box;height:204px;">
-            {% endif %}
+            <div data-card-container="true" data-container-type="top" data-floor="160"
+              style="box-sizing:border-box;height:160px;">
+              {% else %}
+              <div data-card-container="true" data-container-type="top" data-floor="204"
+                style="box-sizing:border-box;height:204px;">
+                {% endif %}
 
-              <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
+                <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
 
-                <!-- BADGE -->
-                {% if item.badge_text %}
-                <tr>
-                  <td style="padding:0 16px;">
-                    <span style="
+                  <!-- BADGE -->
+                  {% if item.badge_text %}
+                  <tr>
+                    <td style="padding:0 16px;">
+                      <span style="
                       display:inline-block;
                       border-radius:4px;
                       {% if item.badge_color %}background-color: {{ item.badge_color }};{% endif %}
@@ -51,51 +55,57 @@
                       font-weight:600;
                       font-family:Arial, Helvetica, sans-serif;
                     ">
-                      {{ item.badge_text }}
-                    </span>
-                  </td>
-                </tr>
+                        {{ item.badge_text }}
+                      </span>
+                    </td>
+                  </tr>
 
-                <!-- Espaciador bajo badge -->
-                <tr><td style="height:8px; line-height:8px; font-size:0;">&#8202;</td></tr>
-                {% endif %}
+                  <!-- Espaciador bajo badge -->
+                  <tr>
+                    <td style="height:8px; line-height:8px; font-size:0;">&#8202;</td>
+                  </tr>
+                  {% endif %}
 
-                <!-- TÍTULO -->
-                <tr>
-                  <td style="padding:0 16px;">
-                    <p style="margin:0; font-size:20px; color:#222222; font-weight:bold;">
-                      {{ item.title }}
-                    </p>
-                  </td>
-                </tr>
+                  <!-- TÍTULO -->
+                  <tr>
+                    <td style="padding:0 16px;">
+                      <p style="margin:0; font-size:20px; color:#222222; font-weight:bold;">
+                        {{ item.title }}
+                      </p>
+                    </td>
+                  </tr>
 
-                <!-- METADATOS -->
-                <tr>
-                  <td style="padding:0 16px;">
-                    <p style="margin:4px 0 0 0; font-size:14px; color:#666666;">
-                      {{ item.metadata }}
-                    </p>
-                  </td>
-                </tr>
+                  <!-- METADATOS -->
+                  <tr>
+                    <td style="padding:0 16px;">
+                      <p style="margin:4px 0 0 0; font-size:14px; color:#666666;">
+                        {{ item.metadata }}
+                      </p>
+                    </td>
+                  </tr>
 
-                <!-- Espaciador -->
-                <tr><td style="height:8px; line-height:8px; font-size:0;">&#8202;</td></tr>
+                  <!-- Espaciador -->
+                  <tr>
+                    <td style="height:8px; line-height:8px; font-size:0;">&#8202;</td>
+                  </tr>
 
-                <!-- DESCRIPCIÓN -->
-                <tr>
-                  <td style="padding:0 16px;">
-                    <p style="margin:0; font-size:14px; color:#222222; line-height:1.4;">
-                      {{ item.description_short }}
-                    </p>
-                  </td>
-                </tr>
+                  <!-- DESCRIPCIÓN -->
+                  <tr>
+                    <td style="padding:0 16px;">
+                      <p style="margin:0; font-size:14px; color:#222222; line-height:1.4;">
+                        {{ item.description_short }}
+                      </p>
+                    </td>
+                  </tr>
 
-                <!-- Espaciador -->
-                <tr><td style="height:12px; line-height:12px; font-size:0;">&#8202;</td></tr>
+                  <!-- Espaciador -->
+                  <tr>
+                    <td style="height:12px; line-height:12px; font-size:0;">&#8202;</td>
+                  </tr>
 
-                <!-- RATING SOLO EN OCIO URBANO -->
-                {% if newsletter.card_mode != "vacacional" %}
-                  
+                  <!-- RATING SOLO EN OCIO URBANO -->
+                  {% if newsletter.card_mode != "vacacional" %}
+
                   {% if item.rating_value %}
                   <tr>
                     <td style="padding:0 16px;">
@@ -110,7 +120,6 @@
                           display:inline-block;
                           margin-right:4px;
                         ">
-                          <!-- ⭐ NUEVO: rating sin decimales cuando no toca -->
                           {{ item.rating_value_formatted }}
                         </span>
 
@@ -123,18 +132,30 @@
                     </td>
                   </tr>
 
-                  <!-- Espaciador bajo rating -->
-                  <tr><td style="height:20px; line-height:20px; font-size:0;">&#8202;</td></tr>
+                  <!-- Espaciador bajo rating (MUTABLE FILLER) -->
+                  <tr>
+                    <td data-editable-spacer="true" data-spacer-id="post-rating" data-base-height="20"
+                      style="height:20px; line-height:20px; font-size:0;">&#8202;</td>
+                  </tr>
 
                   {% else %}
-                  <!-- Cuando no hay rating reservamos altura -->
-                  <tr><td style="height:46px; line-height:46px; font-size:0;">&#8202;</td></tr>
+                  <!-- Cuando no hay rating reservamos altura (MUTABLE FILLER) -->
+                  <tr>
+                    <td data-editable-spacer="true" data-spacer-id="post-rating" data-base-height="46"
+                      style="height:46px; line-height:46px; font-size:0;">&#8202;</td>
+                  </tr>
                   {% endif %}
 
-                {% endif %}
+                  {% else %}
+                  <!-- Modo vacacional: Necesitamos filler para alinear -->
+                  <tr>
+                    <td data-editable-spacer="true" data-spacer-id="post-rating" data-base-height="20"
+                      style="height:20px; line-height:20px; font-size:0;">&#8202;</td>
+                  </tr>
+                  {% endif %}
 
-              </table>
-            </div>
+                </table>
+              </div>
 
           </td>
         </tr>
@@ -150,21 +171,23 @@
           <td valign="top" style="word-break:break-word">
 
             {% if newsletter.card_mode == "vacacional" %}
-            <div style="box-sizing:border-box;height:130px;">
-            {% else %}
-            <div style="box-sizing:border-box;height:132px;">
-            {% endif %}
+            <div data-card-container="true" data-container-type="bottom" data-floor="130"
+              style="box-sizing:border-box;height:130px;">
+              {% else %}
+              <div data-card-container="true" data-container-type="bottom" data-floor="132"
+                style="box-sizing:border-box;height:132px;">
+                {% endif %}
 
-              <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
+                <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
 
-                <!-- PRECIOS -->
-                {% if item.price_old and item.discount_percentage %}
-                <tr>
-                  <td style="padding:0 16px;">
-                    <p style="margin:0; font-size:14px; color:#666;">desde <s>{{ item.price_old }} €</s></p>
-                    <p style="margin:0; font-size:20px; font-weight:bold;">
-                      {{ item.price }} €
-                      <span style="
+                  <!-- PRECIOS -->
+                  {% if item.price_old and item.discount_percentage %}
+                  <tr>
+                    <td style="padding:0 16px;">
+                      <p style="margin:0; font-size:14px; color:#666;">desde <s>{{ item.price_old }} €</s></p>
+                      <p style="margin:0; font-size:20px; font-weight:bold;">
+                        {{ item.price }} €
+                        <span style="
                         float:right;
                         color:#e6002c;
                         margin-left:12px;
@@ -175,17 +198,17 @@
                         line-height:20px;
                         font-weight:600;
                       ">-{{ item.discount_percentage }}%</span>
-                    </p>
-                  </td>
-                </tr>
+                      </p>
+                    </td>
+                  </tr>
 
-                {% elif item.discount_percentage %}
-                <tr>
-                  <td style="padding:0 16px;">
-                    <p style="margin:0; font-size:14px; color:#666;">desde</p>
-                    <p style="margin:0; font-size:20px; font-weight:bold;">
-                      {{ item.price }} €
-                      <span style="
+                  {% elif item.discount_percentage %}
+                  <tr>
+                    <td style="padding:0 16px;">
+                      <p style="margin:0; font-size:14px; color:#666;">desde</p>
+                      <p style="margin:0; font-size:20px; font-weight:bold;">
+                        {{ item.price }} €
+                        <span style="
                         float:right;
                         color:#e6002c;
                         margin-left:12px;
@@ -196,40 +219,41 @@
                         line-height:20px;
                         font-weight:600;
                       ">-{{ item.discount_percentage }}%</span>
-                    </p>
-                  </td>
-                </tr>
+                      </p>
+                    </td>
+                  </tr>
 
-                {% else %}
-                <tr>
-                  <td style="padding:0 16px;">
-                    <p style="margin:0; font-size:14px; color:#666;">desde</p>
-                    <p style="margin:0; font-size:20px; font-weight:bold;">{{ item.price }} €</p>
-                  </td>
-                </tr>
-                {% endif %}
+                  {% else %}
+                  <tr>
+                    <td style="padding:0 16px;">
+                      <p style="margin:0; font-size:14px; color:#666;">desde</p>
+                      <p style="margin:0; font-size:20px; font-weight:bold;">{{ item.price }} €</p>
+                    </td>
+                  </tr>
+                  {% endif %}
 
-                <!-- Espaciador antes del CTA -->
-                <tr><td style="height:16px; line-height:16px; font-size:0;">&#8202;</td></tr>
+                  <!-- Espaciador antes del CTA -->
+                  <tr>
+                    <td style="height:16px; line-height:16px; font-size:0;">&#8202;</td>
+                  </tr>
 
-                <!-- CTA -->
-                <tr>
-                  <td align="center" style="padding:0 16px 16px 16px;">
-                    <a href="{{ item.url | safe }}" target="_blank"
-                       style="background:#ff002d;color:#ffffff;font-size:16px;font-weight:bold;padding:12px 24px;border-radius:999px;display:block;text-align:center;">
-                      {{ item.cta_label }}
-                    </a>
-                  </td>
-                </tr>
+                  <!-- CTA -->
+                  <tr>
+                    <td align="center" style="padding:0 16px 16px 16px;">
+                      <a href="{{ item.url | safe }}" target="_blank"
+                        style="background:#ff002d;color:#ffffff;font-size:16px;font-weight:bold;padding:12px 24px;border-radius:999px;display:block;text-align:center;">
+                        {{ item.cta_label }}
+                      </a>
+                    </td>
+                  </tr>
 
-                {% if newsletter.card_mode != "vacacional" and item.discount_percentage %}
-                <tr><td style="height:24px; line-height:24px; font-size:0;">&#8202;</td></tr>
-                {% else %}
-                <tr><td style="height:12px; line-height:12px; font-size:0;">&#8202;</td></tr>
-                {% endif %}
+                  <!-- Espaciador final fijo -->
+                  <tr>
+                    <td style="height:24px; line-height:24px; font-size:0;">&#8202;</td>
+                  </tr>
 
-              </table>
-            </div>
+                </table>
+              </div>
 
           </td>
         </tr>

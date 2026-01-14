@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <title>Archivo Visual - Newsletters</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #FF002D;
+            --primary-dark: #D60026;
+            --bg: #F3F4F6;
+            --text-main: #1F2937;
+            --text-sec: #6B7280;
+            --border: #E5E7EB;
+            --input-bg: #F9FAFB;
+            --input-border: #D1D5DB;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg);
+            margin: 0;
+            padding: 40px;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .header-bar {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .title-group h2 {
+            margin: 0 0 5px 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .title-group p {
+            margin: 0;
+            color: var(--text-sec);
+            font-size: 0.9rem;
+        }
+
+        .search-box input {
+            padding: 10px 15px;
+            width: 300px;
+            border: 1px solid var(--input-border);
+            border-radius: 6px;
+            background: var(--input-bg);
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+        }
+
+        .btn-back {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-sec);
+            margin-right: 20px;
+        }
+
+        .btn-back:hover {
+            color: var(--primary);
+        }
+
+        .archive-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .archive-item {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .archive-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            border-color: #D1D5DB;
+        }
+
+        .item-info {
+            flex-grow: 1;
+        }
+
+        .item-title {
+            font-weight: 600;
+            font-size: 1rem;
+            color: #111;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .item-date {
+            font-size: 0.8rem;
+            color: var(--text-sec);
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .action-link {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-sec);
+            transition: color 0.2s;
+        }
+
+        .action-link:hover {
+            color: var(--primary);
+        }
+
+        .action-link.delete:hover {
+            color: #DC2626;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-sec);
+            padding: 40px;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="header-bar">
+            <div class="title-group">
+                <h2>Archivo Visual</h2>
+                <p>Tus newsletters editadas y listas para retomar.</p>
+            </div>
+            <div style="display: flex; align-items: center;">
+                <a href="/" class="btn-back">← Volver al Panel</a>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Buscar por nombre...">
+                </div>
+            </div>
+        </div>
+
+        <div class="archive-list" id="archiveList">
+            {% for item in items %}
+            <div class="archive-item" data-name="{{ item.filename }}">
+                <div class="item-info">
+                    <span class="item-title">{{ item.filename.replace('.html', '') }}</span>
+                    <span class="item-date">Última edición: {{ item.updated }}</span>
+                </div>
+                <div class="item-actions">
+                    <a href="/load_visual_archive/{{ item.filename }}" class="action-link">Continuar Editando</a>
+                    <a href="/delete_visual/{{ item.filename }}" class="action-link delete"
+                        onclick="return confirm('¿Eliminar permanentemente?');">Eliminar</a>
+                </div>
+            </div>
+            {% else %}
+            <div class="empty-state">No hay newsletters guardadas en el archivo visual.</div>
+            {% endfor %}
+        </div>
+
+    </div>
+
+    <script>
+        const input = document.getElementById('searchInput');
+        const items = document.getElementsByClassName('archive-item');
+
+        input.addEventListener('keyup', function () {
+            const filter = input.value.toLowerCase();
+            for (let i = 0; i < items.length; i++) {
+                const name = items[i].getAttribute('data-name').toLowerCase();
+                items[i].style.display = name.includes(filter) ? "" : "none";
+            }
+        });
+    </script>
+
+</body>
+
+</html>
